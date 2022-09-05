@@ -1,0 +1,71 @@
+{
+  "name": "test-o-matiq",
+  "version": "0.0.1",
+  "description": "Data testing for Qlik apps",
+  "license": "MIT",
+  "author": {
+    "email": "info@informatiqal.com",
+    "name": "Informatiqal @informatiqal",
+    "url": "https://informatiqal.com"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "node dist/app.js",
+    "prestart": "npm run build-tsc",
+    "build-tsc": "tsc",
+    "build": "rollup -c",
+    "watch": "rollup -cw",
+    "test": "set TS_NODE_PROJECT=tsconfig.test.json&mocha --require ts-node/register test/**/*.spec.ts",
+    "test-badge": "set TS_NODE_PROJECT=tsconfig.test.json&mocha --reporter .\\node_modules\\mocha-badge-generator\\src --reporter-options=badge_format=svg,badge_output=badge.svg --require ts-node/register test/**/*.spec.ts"
+  },
+  "keywords": [
+    "qlik",
+    "sense",
+    "qlik-sense",
+    "qlik sense"
+  ],
+  "files": [
+    "dist",
+    "*.json",
+    "*.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "!tsconfig.json",
+    "!renovate.json",
+    "!tsconfig.test.json",
+    "!.markdownlint.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/informatiqal/test-o-matiq.git"
+  },
+  "bugs": {
+    "url": "https://github.com/informatiqal/test-o-matiq/issues"
+  },
+  "homepage": "https://informatiqal.com/automatiqal/",
+  "devDependencies": {
+    "@rollup/plugin-json": "^4.1.0",
+    "@types/chai": "4.3.3",
+    "@types/enigma.js": "^2.2.2",
+    "@types/mocha": "9.1.1",
+    "@types/node": "18.7.13",
+    "@types/qlik-engineapi": "^12.67.12",
+    "chai": "4.3.6",
+    "dotenv": "16.0.1",
+    "enigma-mixin": "^1.3.2",
+    "enigma.js": "^2.9.0",
+    "mocha": "10.0.0",
+    "nyc": "15.1.0",
+    "rollup": "2.78.1",
+    "rollup-plugin-delete": "2.0.0",
+    "rollup-plugin-typescript2": "0.33.0",
+    "ts-json-schema-generator": "^1.0.0",
+    "ts-node": "10.9.1",
+    "typed-emitter": "^2.1.0",
+    "typedoc": "0.23.11",
+    "typescript": "4.8.2",
+    "ws": "^8.8.1"
+  }
+}
