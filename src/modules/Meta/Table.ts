@@ -24,6 +24,21 @@ export class TableCounts {
     return this.tables.map((t) => {
       const tableDetails = qtr.filter((t1) => t1.qName == t.name)[0];
 
+      if (!tableDetails) {
+        this.emitter.emit("testError", {
+          group: "Meta",
+          subGroup: "Table row counts",
+          name: t.name,
+          reason: `Table "${t.name}" do not exists`,
+        });
+
+        return {
+          status: false,
+          name: "Table row counts",
+          message: `Table "${t.name}" do not exists`,
+        };
+      }
+
       const tableDetailsStatus =
         tableDetails.qNoOfRows != t.count ? false : true;
 

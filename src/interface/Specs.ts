@@ -20,11 +20,16 @@ export interface ITable {
   count: number;
 }
 
+export interface IMetaVariable {
+  Exists?: string[];
+  DoNotExists: string[];
+}
+
 export interface IMeta {
   DataModel?: IDataModel;
   Field?: Field[];
   Table?: ITable[];
-  Variable?: string[];
+  Variable?: IMetaVariable;
 }
 
 export interface Details {
@@ -118,4 +123,6 @@ export interface IEventGroupStartEnd {
   isFinished: boolean;
   status: boolean;
   elapsedTime: number;
+  totalTests: number;
+  failedTests: number;
 }

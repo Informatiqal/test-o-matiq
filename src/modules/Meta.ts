@@ -50,7 +50,9 @@ export class Meta {
 
     if (this.meta.Variable) {
       const ve = new VariablesExists(this.meta.Variable, this.app);
-      this.totalTests += this.meta.Variable.length;
+      this.totalTests +=
+        (this.meta.Variable.DoNotExists?.length || 0) +
+        (this.meta.Variable.Exists?.length || 0);
       promises.push(ve.process());
     }
 
