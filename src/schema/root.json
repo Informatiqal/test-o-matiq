@@ -1,0 +1,364 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/Welcome",
+  "definitions": {
+    "Welcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "skip": {
+          "type": "boolean"
+        },
+        "selections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Selection"
+          }
+        },
+        "spec": {
+          "$ref": "#/definitions/Spec"
+        }
+      },
+      "required": [
+        "description",
+        "spec",
+        "version"
+      ],
+      "title": "Welcome9"
+    },
+    "Selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          }
+        }
+      },
+      "required": [
+        "field",
+        "values"
+      ],
+      "title": "Selection"
+    },
+    "Spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "Meta": {
+          "$ref": "#/definitions/Meta"
+        },
+        "Scalar": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Scalar"
+          }
+        },
+        "List": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/List"
+          }
+        },
+        "Table": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Table"
+          }
+        },
+        "Object": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Spec"
+    },
+    "List": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "values"
+      ],
+      "title": "List"
+    },
+    "Meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "DataModel": {
+          "$ref": "#/definitions/DataModel"
+        },
+        "Field": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Field"
+          }
+        },
+        "AlwaysOneSelectedFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Table": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Field"
+          }
+        },
+        "Variable": {
+          "$ref": "#/definitions/Variable"
+        }
+      },
+      "title": "Meta"
+    },
+    "DataModel": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "Field": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Table": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "SyntheticKeys": {
+          "type": "boolean"
+        },
+        "AlwaysOneSelected1": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "DataModel"
+    },
+    "Field": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "count",
+        "name"
+      ],
+      "title": "Field"
+    },
+    "Variable": {
+      "type": "object",
+      "additionalProperties": true,
+      "anyOf": [
+        {
+          "properties": {
+            "Exists": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "Exists"
+          ]
+        },
+        {
+          "properties": {
+            "DoNotExists": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "DoNotExists"
+          ]
+        }
+      ],
+      "title": "Variable"
+    },
+    "Scalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/ResultUnion"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "details": {
+          "$ref": "#/definitions/Details"
+        }
+      },
+      "required": [
+        "expression",
+        "name",
+        "result"
+      ],
+      "title": "Scalar"
+    },
+    "Details": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "type": "string",
+          "default": "$"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "Details"
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "measures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sort": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "result": {
+          "$ref": "#/definitions/ResultClass"
+        }
+      },
+      "required": [
+        "dimensions",
+        "measures",
+        "name",
+        "result"
+      ],
+      "title": "Table"
+    },
+    "Measure": {
+      "type": "string",
+      "additionalProperties": false,
+      "title": "Measure"
+    },
+    "ResultClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "Rows"
+      ],
+      "title": "ResultClass"
+    },
+    "ResultUnion": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "ResultUnion"
+    }
+  }
+}

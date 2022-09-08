@@ -22,7 +22,7 @@ export interface ITable {
 
 export interface IMetaVariable {
   Exists?: string[];
-  DoNotExists: string[];
+  DoNotExists?: string[];
 }
 
 export interface IMeta {

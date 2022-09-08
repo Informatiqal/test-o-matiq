@@ -1,3 +1,4 @@
+import Ajv from "ajv";
 import { IGroupResult, Root } from "./interface/Specs";
 import { Meta } from "./modules/Meta";
 import { Scalar } from "./modules/Scalar";
@@ -7,14 +8,15 @@ import { QObject } from "./modules/Object";
 import { Selection } from "./modules/Selection";
 import { EventsBus } from "./util/EventBus";
 
-// import { Qlik } from "./util/Qlik";
 import { IAppMixin } from "./interface/Mixin";
+import * as schema from "./schema/root.json";
 
-export namespace QlikTesting {
+import draft from "ajv/dist/refs/json-schema-draft-06.json";
+
+export namespace TestOMatiq {
   export class client {
     specs: Root;
     emitter: EventsBus;
-    // private qlik: Qlik;
     testResults: IGroupResult[];
     qlikApp: IAppMixin;
     testGroups: string[];
@@ -28,11 +30,24 @@ export namespace QlikTesting {
       this.testGroups = Object.entries(specs.spec).map((value) =>
         value[0].toString()
       );
+
+      const ajv = new Ajv({
+        strict: true,
+        allowUnionTypes: true,
+        allErrors: true,
+      });
+      ajv.addMetaSchema(draft);
+
+      const isValidSpec = ajv.validate(schema, specs);
+
+      if (isValidSpec == false)
+        throw {
+          message: "Error(s) while validating the input",
+          errors: ajv.errors,
+        };
     }
 
     async run(): Promise<IGroupResult[]> {
-      // await this.qlik.init();
-
       if (this.specs.selections) {
         this.emitter.emit("all", {
           message: `Applying selections in ${this.specs.selections.length} field(s)`,

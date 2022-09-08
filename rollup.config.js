@@ -7,12 +7,13 @@ export default {
   input: "src/index.ts",
   output: [
     {
-      file: pkg.main,
-      format: "cjs",
-    },
-    {
       file: pkg.module,
       format: "es",
+      name: "TesOMatiq",
+      globals: {
+        // ajv: "Ajv",
+        events: "events",
+      },
     },
   ],
   external: [
