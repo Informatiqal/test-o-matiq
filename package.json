@@ -32,6 +32,7 @@
     "*.md",
     "LICENSE",
     "CHANGELOG.md",
+    "funding.yml",
     "!tsconfig.json",
     "!renovate.json",
     "!tsconfig.test.json",
