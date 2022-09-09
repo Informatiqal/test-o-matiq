@@ -1,6 +1,6 @@
 {
   "name": "test-o-matiq",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Data testing for Qlik apps",
   "license": "MIT",
   "author": {
@@ -17,6 +17,7 @@
     "build-tsc": "tsc",
     "build": "rollup -c",
     "watch": "rollup -cw",
+    "docs": "npx typedoc src/index.doc.ts --name \"Test-O-Matiq\" --excludePrivate --hideGenerator --darkHighlightTheme dark-plus",
     "test": "set TS_NODE_PROJECT=tsconfig.test.json&mocha --require ts-node/register test/**/*.spec.ts",
     "test-badge": "set TS_NODE_PROJECT=tsconfig.test.json&mocha --reporter .\\node_modules\\mocha-badge-generator\\src --reporter-options=badge_format=svg,badge_output=badge.svg --require ts-node/register test/**/*.spec.ts"
   },
