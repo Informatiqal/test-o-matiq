@@ -5,8 +5,7 @@
 
 ---
 
-> **Note**
-> **Please check out the [Wiki section](https://github.com/Informatiqal/test-o-matiq/wiki) for details and examples**
+> **Note** > **Please check out the [Wiki section](https://github.com/Informatiqal/test-o-matiq/wiki) for details and examples**
 
 The core for data testing framework for Qlik Sense apps
 
@@ -38,7 +37,8 @@ Install the package from npm
 npm install --save test-o-matiq
 ```
 
-> **Important** > `test-o-matiq` accepts a valid json input and an instance of a Qlik app. But the app instance should have [enigma-mixin](https://github.com/countnazgul/enigma-mixin) added
+> **Warning**
+> `test-o-matiq` accepts a valid json input and an instance of a Qlik app. But the app instance should have [enigma-mixin](https://github.com/countnazgul/enigma-mixin) added
 
 ## Usage
 
