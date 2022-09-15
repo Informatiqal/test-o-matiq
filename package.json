@@ -60,7 +60,7 @@
     "enigma.js": "^2.9.0",
     "mocha": "10.0.0",
     "nyc": "15.1.0",
-    "rollup": "2.78.1",
+    "rollup": "2.79.0",
     "rollup-plugin-delete": "2.0.0",
     "rollup-plugin-typescript2": "0.34.0",
     "ts-json-schema-generator": "^1.0.0",
