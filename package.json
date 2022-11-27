@@ -48,7 +48,7 @@
   },
   "homepage": "https://informatiqal.com/automatiqal/",
   "devDependencies": {
-    "@rollup/plugin-json": "4.1.0",
+    "@rollup/plugin-json": "5.0.2",
     "@types/chai": "4.3.3",
     "@types/enigma.js": "2.2.2",
     "@types/mocha": "10.0.0",
