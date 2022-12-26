@@ -1,7 +1,9 @@
-import typescript from "rollup-plugin-typescript2";
+import typescript from "@rollup/plugin-typescript";
 import del from "rollup-plugin-delete";
-import pkg from "./package.json";
 import json from "@rollup/plugin-json";
+import { readFileSync } from "fs";
+
+const pkg = JSON.parse(readFileSync("./package.json"));
 
 export default {
   input: "src/index.ts",
@@ -10,6 +12,7 @@ export default {
       file: pkg.module,
       format: "es",
       name: "TesOMatiq",
+      sourcemap: true,
       globals: {
         // ajv: "Ajv",
         events: "events",
@@ -26,8 +29,6 @@ export default {
       targets: "dist/*",
     }),
     json(),
-    typescript({
-      typescript: require("typescript"),
-    }),
+    typescript(),
   ],
 };
