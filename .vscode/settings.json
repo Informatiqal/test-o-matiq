@@ -2,5 +2,10 @@
   "cSpell.words": [
     "engineapi",
     "matiq"
-  ]
+  ],
+  "mochaExplorer.nodeArgv": [
+    "--loader=ts-node/esm",
+    "--no-warnings=ExperimentalWarning",
+    "--experimental-specifier-resolution=node",
+  ],
 }
