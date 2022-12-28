@@ -9,9 +9,9 @@ import { Selection } from "./modules/Selection";
 import { EventsBus } from "./util/EventBus";
 
 import { IAppMixin } from "./interface/Mixin";
-import * as schema from "./schema/root.json";
+import * as schema from "./schema/root.json" assert { type: "json" };
 
-import draft from "ajv/dist/refs/json-schema-draft-06.json";
+import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
 
 // export namespace TestOMatiq {
 export class TestOMatiq {
