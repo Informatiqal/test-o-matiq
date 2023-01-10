@@ -4,6 +4,7 @@ import { DataModel } from "../modules/Meta/DataModel/index";
 import { FieldCounts } from "./Meta/Field";
 import { TableCounts } from "./Meta/Table";
 import { VariablesExists } from "./Meta/Variable";
+import { QObject } from "./Meta/Object";
 
 export class Meta {
   meta: IMeta;
@@ -15,6 +16,7 @@ export class Meta {
   private elapsedTime: number;
   private totalTests: number;
   private testResults: ITestResponse[];
+  // private qObject: QObject;
 
   constructor(meta: IMeta, app: IAppMixin) {
     this.meta = meta;
@@ -54,6 +56,11 @@ export class Meta {
         (this.meta.Variable.DoNotExists?.length || 0) +
         (this.meta.Variable.Exists?.length || 0);
       promises.push(ve.process());
+    }
+
+    if (this.meta.Object) {
+      const qObject = new QObject(this.meta.Object, this.app);
+      promises.push(qObject.run());
     }
 
     const results = await (await Promise.all(promises)).flat();

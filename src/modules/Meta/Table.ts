@@ -1,5 +1,6 @@
 import { ITable, ITestResponse } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
+import { operations } from "../../util/common";
 
 export class TableCounts {
   private app: EngineAPI.IApp;
@@ -39,8 +40,10 @@ export class TableCounts {
         };
       }
 
-      const tableDetailsStatus =
-        tableDetails.qNoOfRows != t.count ? false : true;
+      const tableDetailsStatus = operations[t.operator ? t.operator : "=="](
+        tableDetails.qNoOfRows,
+        t.count
+      );
 
       if (!tableDetailsStatus) {
         this.emitter.emit("testError", {

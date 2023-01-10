@@ -1,7 +1,8 @@
 {
   "cSpell.words": [
     "engineapi",
-    "matiq"
+    "matiq",
+    "criterias"
   ],
   "mochaExplorer.nodeArgv": [
     "--loader=ts-node/esm",

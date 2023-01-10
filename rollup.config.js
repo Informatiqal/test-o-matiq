@@ -2,6 +2,7 @@ import typescript from "@rollup/plugin-typescript";
 import del from "rollup-plugin-delete";
 import json from "@rollup/plugin-json";
 import { readFileSync } from "fs";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 
 const pkg = JSON.parse(readFileSync("./package.json"));
 
@@ -28,6 +29,7 @@ export default {
     del({
       targets: "dist/*",
     }),
+    nodeResolve(),
     json(),
     typescript(),
   ],

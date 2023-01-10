@@ -1,6 +1,6 @@
-import { IGroupResult, ITestResponse } from "../interface/Specs";
-import { EventsBus } from "../util/EventBus";
-import { concatResults } from "../util/common";
+import { IGroupResult, ITestResponse } from "../../interface/Specs";
+import { EventsBus } from "../../util/EventBus";
+import { concatResults } from "../../util/common";
 
 export class QObject {
   private app: EngineAPI.IApp;
@@ -20,7 +20,7 @@ export class QObject {
     this.isFailedGroup = false;
   }
 
-  async run(): Promise<IGroupResult> {
+  async run(): Promise<ITestResponse[]> {
     this.startTime = new Date();
 
     const objectsResult: ITestResponse = await this.app
@@ -53,18 +53,20 @@ export class QObject {
         };
       });
 
-    this.endTime = new Date();
-    this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
+    return [objectsResult];
 
-    return {
-      status: !this.isFailedGroup,
-      group: "Object",
-      totalTests: this.qObjects.length,
-      failedTests: this.failedTests,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      elapsedTime: this.elapsedTime,
-      testResults: [objectsResult],
-    };
+    // this.endTime = new Date();
+    // this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
+
+    // return {
+    //   status: !this.isFailedGroup,
+    //   group: "Object",
+    //   totalTests: this.qObjects.length,
+    //   failedTests: this.failedTests,
+    //   startTime: this.startTime,
+    //   endTime: this.endTime,
+    //   elapsedTime: this.elapsedTime,
+    //   testResults: [objectsResult],
+    // };
   }
 }

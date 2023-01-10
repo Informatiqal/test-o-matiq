@@ -31,9 +31,16 @@ export class List {
             destroyOnComplete: true,
             getAllData: true,
           })
-          .then((res) => res.flattenData().map((f) => f.qText))
+          .then((res) =>
+            res.flattenData().map((f) => ({
+              qText: f.qText,
+              qState: f.qState,
+            }))
+          )
           .then((values) => {
-            const notFound = s.values.filter((x) => !values.includes(x));
+            const temp_values = values.map((v) => v.qText);
+            // TODO: filter for values in specific qState. Default state to filter?
+            const notFound = s.values.filter((x) => !temp_values.includes(x));
 
             const listResultStatus = notFound.length > 0 ? false : true;
 

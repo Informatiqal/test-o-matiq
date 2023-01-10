@@ -1,4 +1,5 @@
 import { IGroupResult, IScalar, ITestResponse } from "../interface/Specs";
+import { operations } from "../util/common";
 import { EventsBus } from "../util/EventBus";
 
 export class Scalar {
@@ -25,11 +26,16 @@ export class Scalar {
     const evaluationResults: ITestResponse[] = await Promise.all(
       this.scalars.map(async (s) => {
         /// evaluate expression
-        const evaluateResult = await this.app.evaluate(s.expression);
+        s.expression = s.expression.trim();
+        const evaluateResult = await this.app.evaluate(
+          s.expression.startsWith("=") ? s.expression : `= ${s.expression}`
+        );
 
         // compare the evaluated result with the expected
-        const evaluateResultStatus =
-          evaluateResult == s.result.toString() ? true : false;
+        const evaluateResultStatus = operations[s.operator ? s.operator : "=="](
+          evaluateResult,
+          s.result.toString()
+        );
 
         // if there is no match emit error event
         if (!evaluateResultStatus) {

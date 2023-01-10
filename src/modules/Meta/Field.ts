@@ -1,5 +1,6 @@
 import { Field, ITestResponse } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
+import { operations } from "../../util/common";
 
 export class FieldCounts {
   private app: EngineAPI.IApp;
@@ -18,7 +19,10 @@ export class FieldCounts {
         try {
           const cardinal = await this.getFieldCounts(f.name);
 
-          const countStatus = cardinal != f.count ? false : true;
+          const countStatus = operations[f.operator ? f.operator : "=="](
+            cardinal,
+            f.count
+          );
 
           if (!countStatus) {
             this.emitter.emit("testError", {

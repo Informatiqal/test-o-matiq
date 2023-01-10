@@ -6,7 +6,7 @@ import {
 } from "../interface/Specs";
 import TypedEmitter from "typed-emitter";
 
-type MessageEvents = {
+export type MessageEvents = {
   testError: (error: IEventError) => void;
   all: (body: { message: string }) => void;
   group: (body: IEventGroupStartEnd) => void;

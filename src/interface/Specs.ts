@@ -1,23 +1,56 @@
-export interface ISelection {
-  field: string;
-  values: number | string[];
-}
+export type IOperator = "<" | ">" | ">=" | "<=" | "==" | "!=";
 
 export interface IDataModel {
+  /**
+   * List fields that should be present in the app
+   */
   Field?: string[];
+  /**
+   * List tables that should be present in the app
+   */
   Table?: string[];
+  /**
+   * Are synthetic keys allowed in the data model
+   */
   SyntheticKeys?: boolean;
+  /**
+   * List of fields that should have always one selected property
+   */
   AlwaysOneSelected?: string[];
 }
 
 export interface Field {
+  /**
+   * Name of the field
+   */
   name: string;
+  /**
+   * Count of cardinal/distinct values to compare with
+   */
   count: number;
+  /**
+   * Comparison operator
+   *
+   * @default ==
+   */
+  operator?: IOperator;
 }
 
 export interface ITable {
+  /**
+   * Name of the data table
+   */
   name: string;
+  /**
+   * Count of rows count to compare with
+   */
   count: number;
+  /**
+   * Comparison operator
+   *
+   * @default ==
+   */
+  operator?: IOperator;
 }
 
 export interface IMetaVariable {
@@ -30,6 +63,10 @@ export interface IMeta {
   Field?: Field[];
   Table?: ITable[];
   Variable?: IMetaVariable;
+  /**
+   * List of object id that should exists in the app
+   */
+  Object?: string[];
 }
 
 export interface Details {
@@ -37,11 +74,28 @@ export interface Details {
 }
 
 export interface IScalar {
+  /**
+   * Name of the test
+   */
   name: string;
+  /**
+   * Short description
+   */
   description?: string;
+  /**
+   * Qlik expression
+   */
   expression: string;
+  /**
+   * Value to compare
+   */
   result: any;
-  operator?: string;
+  /**
+   * TBA
+   */
+  operator: IOperator;
+  // TODO: deviation/difference?
+  // deviation?: string;
   details?: Details;
 }
 
@@ -71,25 +125,126 @@ export interface ITable2 {
   result: Result;
 }
 
-export interface IQObject {
-  id: string;
-  type: "sheet" | "visual";
+// export interface IQObject {
+//   id: string;
+//   type: "sheet" | "visual";
+// }
+
+export type ISelection =
+  | {
+      /**
+       * Clear all selections (perform `clearAll()`)
+       */
+      clearAll: boolean;
+    }
+  | {
+      /**
+       * Name of the field to select into
+       */
+      field: string;
+      /**
+       * List of values to select.
+       *
+       * Provide all values as string (even if the actual values are in number format)!
+       *
+       * If the selection should be applied via expression then start the value with "=". e.g.
+       * ```
+       * { values: ["=Only('Test')"] }
+       * ```
+       */
+      values: string[];
+    }
+  | {
+      /**
+       * NAME of the bookmark to be applied
+       */
+      bookmark: string;
+    }
+  | {
+      /**
+       * Clear all selected values from provided fields list
+       */
+      clear: string[];
+    };
+
+export interface IData {
+  /**
+   * Unique name of the tests suite
+   */
+  Name: string;
+  /**
+   * Descriptions of the tests
+   */
+  Description?: string;
+  /**
+   * What selections to be applied BEFORE running the test
+   *
+   * Selections are applied one after another in order of appearance - first defined, fist selected
+   */
+  Selections?: ISelection[];
+  /**
+   * List of data tests
+   */
+  Tests?: {
+    /**
+     * Single expression
+     * ```
+     * sum(Sales) > 100;
+     * sum(Sales) != 100;
+     * ```
+     */
+    Scalar?: IScalar[];
+    /**
+     * Check for specific values presence in fields (and their state)
+     */
+    List?: IList[];
+    /**
+     * TBA
+     */
+    Table?: ITable2[];
+  };
 }
 
 export interface Spec {
   Meta?: IMeta;
-  Scalar?: IScalar[];
-  List?: IList[];
-  Table?: ITable2[];
-  Object?: string[];
+  Data: IData[];
 }
 
+// export enum IQState {
+//   L = "Locked",
+//   S = "Selected",
+//   O = "Optional",
+//   D = "Deselected",
+//   A = "Alternative",
+//   X = "eXcluded",
+//   XS = "eXcluded Selected",
+//   XL = "eXcluded Locked",
+// }
+
 export interface Root {
+  /**
+   * Author name
+   */
   author?: string;
+  /**
+   * Short description
+   */
   description?: string;
-  selections?: ISelection[];
+  // /**
+  //  * What selections should be applied before running the tests
+  //  */
+  // selections?: ISelection[];
+  /**
+   * Skip the current tests
+   */
   skip?: boolean;
+  /**
+   * The test specification
+   */
   spec: Spec;
+  /**
+   * version number of the document (e.g. 1, 1.1, 0.1.0, 1.2.1 etc.)
+   */
   version?: string;
 }
 
