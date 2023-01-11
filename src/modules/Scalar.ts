@@ -27,14 +27,22 @@ export class Scalar {
       this.scalars.map(async (s) => {
         /// evaluate expression
         s.expression = s.expression.trim();
-        const evaluateResult = await this.app.evaluate(
-          s.expression.startsWith("=") ? s.expression : `= ${s.expression}`
-        );
+        const evaluateResult = await this.app
+          .evaluateEx(
+            s.expression.startsWith("=") ? s.expression : `= ${s.expression}`
+          )
+          .then((r) => (r.qIsNumeric ? r.qNumber : r.qText));
+
+        const compareWith = (s.result as string).startsWith("=")
+          ? await this.app
+              .evaluateEx(s.result as string)
+              .then((r) => (r.qIsNumeric ? r.qNumber : r.qText))
+          : s.result;
 
         // compare the evaluated result with the expected
         const evaluateResultStatus = operations[s.operator ? s.operator : "=="](
           evaluateResult,
-          s.result.toString()
+          compareWith
         );
 
         // if there is no match emit error event
@@ -44,7 +52,7 @@ export class Scalar {
           this.emitter.emit("testError", {
             group: "Scalar",
             name: s.name,
-            reason: `Result value and expected do not match. Expected "${s.result}, received "${evaluateResult}"`,
+            reason: `Failed: ${evaluateResult} ${s.operator} ${compareWith}`,
           });
         }
 
@@ -52,8 +60,8 @@ export class Scalar {
           name: s.name,
           status: evaluateResultStatus,
           message: !evaluateResultStatus
-            ? `Result value and expected do not match. Expected "${s.result}, received "${evaluateResult}"`
-            : "Passed: Result value and expected are matching",
+            ? `Failed: ${evaluateResult} ${s.operator} ${compareWith}`
+            : `Passed: ${evaluateResult} ${s.operator} ${compareWith}`,
         };
       })
     );

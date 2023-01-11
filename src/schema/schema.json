@@ -1,0 +1,443 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Root",
+  "definitions": {
+    "Root": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "Author name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Short description"
+        },
+        "skip": {
+          "type": "boolean",
+          "description": "Skip the current tests"
+        },
+        "spec": {
+          "$ref": "#/definitions/Spec",
+          "description": "The test specification"
+        },
+        "version": {
+          "type": "string",
+          "description": "version number of the document (e.g. 1, 1.1, 0.1.0, 1.2.1 etc.)"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "additionalProperties": false
+    },
+    "Spec": {
+      "type": "object",
+      "properties": {
+        "Meta": {
+          "$ref": "#/definitions/IMeta"
+        },
+        "Data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IData"
+          }
+        }
+      },
+      "required": [
+        "Data"
+      ],
+      "additionalProperties": false
+    },
+    "IMeta": {
+      "type": "object",
+      "properties": {
+        "DataModel": {
+          "$ref": "#/definitions/IDataModel"
+        },
+        "Field": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Field"
+          }
+        },
+        "Table": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ITable"
+          }
+        },
+        "Variable": {
+          "$ref": "#/definitions/IMetaVariable"
+        },
+        "Object": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of object id that should exists in the app"
+        }
+      },
+      "additionalProperties": false
+    },
+    "IDataModel": {
+      "type": "object",
+      "properties": {
+        "Field": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List fields that should be present in the app"
+        },
+        "Table": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List tables that should be present in the app"
+        },
+        "SyntheticKeys": {
+          "type": "boolean",
+          "description": "Are synthetic keys allowed in the data model"
+        },
+        "AlwaysOneSelected": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of fields that should have always one selected property"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Field": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the field"
+        },
+        "count": {
+          "type": "number",
+          "description": "Count of cardinal/distinct values to compare with"
+        },
+        "operator": {
+          "$ref": "#/definitions/IOperator",
+          "description": "Comparison operator",
+          "default": "=="
+        }
+      },
+      "required": [
+        "name",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "IOperator": {
+      "type": "string",
+      "enum": [
+        "<",
+        ">",
+        ">=",
+        "<=",
+        "==",
+        "!="
+      ]
+    },
+    "ITable": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the data table"
+        },
+        "count": {
+          "type": "number",
+          "description": "Count of rows count to compare with"
+        },
+        "operator": {
+          "$ref": "#/definitions/IOperator",
+          "description": "Comparison operator",
+          "default": "=="
+        }
+      },
+      "required": [
+        "name",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "IMetaVariable": {
+      "type": "object",
+      "properties": {
+        "Exists": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "DoNotExists": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "IData": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Unique name of the tests suite"
+        },
+        "Description": {
+          "type": "string",
+          "description": "Descriptions of the tests"
+        },
+        "Selections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ISelection"
+          },
+          "description": "What selections to be applied BEFORE running the test\n\nSelections are applied one after another in order of appearance - first defined, fist selected"
+        },
+        "Tests": {
+          "type": "object",
+          "properties": {
+            "Scalar": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IScalar"
+              },
+              "description": "Single expression ``` sum(Sales) > 100; sum(Sales) != 100; ```"
+            },
+            "List": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IList"
+              },
+              "description": "Check for specific values presence in fields (and their state)"
+            },
+            "Table": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ITable2"
+              },
+              "description": "TBA"
+            }
+          },
+          "additionalProperties": false,
+          "description": "List of data tests"
+        }
+      },
+      "required": [
+        "Name"
+      ],
+      "additionalProperties": false
+    },
+    "ISelection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "clearAll": {
+              "type": "boolean",
+              "description": "Clear all selections (perform `clearAll()`)"
+            }
+          },
+          "required": [
+            "clearAll"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string",
+              "description": "Name of the field to select into"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of values to select.\n\nProvide all values as string (even if the actual values are in number format)!\n\nIf the selection should be applied via expression then start the value with \"=\". e.g. ``` { values: [\"=Only('Test')\"] } ```"
+            }
+          },
+          "required": [
+            "field",
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bookmark": {
+              "type": "string",
+              "description": "NAME of the bookmark to be applied"
+            }
+          },
+          "required": [
+            "bookmark"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "clear": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Clear all selected values from provided fields list"
+            }
+          },
+          "required": [
+            "clear"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "IScalar": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the test"
+        },
+        "description": {
+          "type": "string",
+          "description": "Short description"
+        },
+        "expression": {
+          "type": "string",
+          "description": "Qlik expression"
+        },
+        "result": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "description": "Value to compare\n\nAccept string, number or expression\n\nTo be evaluated as expressions the values should start with =\n\n``` result: 100 result: \"abcd\" result: \"=sum(100)\" ```"
+        },
+        "operator": {
+          "$ref": "#/definitions/IOperator",
+          "description": "TBA"
+        },
+        "details": {
+          "$ref": "#/definitions/Details"
+        }
+      },
+      "required": [
+        "name",
+        "expression",
+        "result",
+        "operator"
+      ],
+      "additionalProperties": false
+    },
+    "Details": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "IList": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "ITable2": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "measures": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sort": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "result": {
+          "$ref": "#/definitions/Result"
+        }
+      },
+      "required": [
+        "name",
+        "dimensions",
+        "measures",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    "Result": {
+      "type": "object",
+      "properties": {
+        "Columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "required": [
+        "Columns",
+        "Rows"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

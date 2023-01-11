@@ -88,8 +88,18 @@ export interface IScalar {
   expression: string;
   /**
    * Value to compare
+   *
+   * Accept string, number or expression
+   *
+   * To be evaluated as expressions the values should start with =
+   *
+   * ```
+   * result: 100
+   * result: "abcd"
+   * result: "=sum(100)"
+   * ```
    */
-  result: any;
+  result: string | number;
   /**
    * TBA
    */
@@ -234,10 +244,10 @@ export interface Root {
   //  * What selections should be applied before running the tests
   //  */
   // selections?: ISelection[];
-  /**
-   * Skip the current tests
-   */
-  skip?: boolean;
+  // /**
+  //  * Skip the current tests
+  //  */
+  // skip?: boolean;
   /**
    * The test specification
    */

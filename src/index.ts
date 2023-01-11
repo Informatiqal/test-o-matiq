@@ -8,7 +8,7 @@ import { EventsBus } from "./util/EventBus";
 // import { Table } from "./modules/Table";
 
 import { IAppMixin } from "./interface/Mixin";
-import * as schema from "./schema/root.json" assert { type: "json" };
+import * as schema from "./schema/schema.json" assert { type: "json" };
 
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
 
@@ -19,6 +19,7 @@ export class TestOMatiq {
   testResults: IGroupResult[];
   qlikApp: IAppMixin;
   testGroups: string[];
+  // qlik: Qlik;
 
   constructor(specs: Root, qlikApp: IAppMixin) {
     this.specs = specs;

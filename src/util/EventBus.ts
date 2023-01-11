@@ -1,19 +1,22 @@
-import { EventEmitter } from "events";
+// import { EventEmitter } from "events";
 import {
   IEventError,
   IEventGroupStartEnd,
   IGroupResult,
 } from "../interface/Specs";
-import TypedEmitter from "typed-emitter";
 
-export type MessageEvents = {
-  testError: (error: IEventError) => void;
-  all: (body: { message: string }) => void;
-  group: (body: IEventGroupStartEnd) => void;
-  "group:result": (body: IGroupResult) => void;
-};
+import { EventEmitter } from "events";
 
-export class EventsBus extends (EventEmitter as new () => TypedEmitter<MessageEvents>) {
+export declare interface EventsBus {
+  on(event: "testError", listener: (name: IEventError) => void): this;
+  on(event: "all", listener: (name: string) => void): this;
+  on(event: "group", listener: (body: IEventGroupStartEnd) => void): this;
+  on(event: "group:result", listener: (body: IGroupResult) => void): this;
+  on(event: "error", listener: (name: IEventError) => void): this;
+  emit(event: string | symbol, ...args: any[]): boolean;
+}
+
+export class EventsBus extends EventEmitter {
   private static instance: EventsBus;
   constructor() {
     super();
