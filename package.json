@@ -35,6 +35,7 @@
     "LICENSE",
     "CHANGELOG.md",
     "funding.yml",
+    "src/schema/schema.json",
     "!tsconfig.json",
     "!renovate.json",
     "!tsconfig.test.json",
