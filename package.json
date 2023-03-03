@@ -57,7 +57,7 @@
     "@types/chai": "^4.3.4",
     "@types/enigma.js": "^2.2.2",
     "@types/mocha": "10.0.1",
-    "@types/node": "18.14.4",
+    "@types/node": "18.14.5",
     "@types/qlik-engineapi": "^12.67.12",
     "chai": "4.3.7",
     "dotenv": "16.0.3",
