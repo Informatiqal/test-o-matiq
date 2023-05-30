@@ -60,7 +60,7 @@
     "@types/node": "18.16.16",
     "@types/qlik-engineapi": "^12.67.12",
     "chai": "4.3.7",
-    "dotenv": "16.0.3",
+    "dotenv": "16.1.0",
     "esm": "^3.2.25",
     "mocha": "10.2.0",
     "nyc": "15.1.0",
