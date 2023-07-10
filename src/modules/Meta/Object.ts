@@ -20,6 +20,9 @@ export class QObject {
     this.isFailedGroup = false;
   }
 
+  /**
+   * Check if the provided objects exists in the app
+   */
   async run(): Promise<ITestResponse[]> {
     this.startTime = new Date();
 

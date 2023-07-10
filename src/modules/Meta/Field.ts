@@ -51,6 +51,9 @@ export class FieldCounts {
     );
   }
 
+  /**
+   * Return the cardinal values count for the provided field name
+   */
   private async getFieldCounts(fieldName: string) {
     try {
       const f = await this.app.getField(fieldName);

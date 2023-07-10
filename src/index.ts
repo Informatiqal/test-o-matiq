@@ -5,6 +5,7 @@ import { Scalar } from "./modules/Scalar";
 import { List } from "./modules/List";
 import { Selection } from "./modules/Selection";
 import { EventsBus } from "./util/EventBus";
+import { homedir } from "os";
 // import { Table } from "./modules/Table";
 
 import { IAppMixin } from "./interface/Mixin";

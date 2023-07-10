@@ -200,7 +200,22 @@
         "Selections": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ISelection"
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "select": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/ISelection"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "select"
+            ]
           },
           "description": "What selections to be applied BEFORE running the test\n\nSelections are applied one after another in order of appearance - first defined, fist selected"
         },

@@ -13,6 +13,10 @@ export class TableCounts {
     this.emitter = new EventsBus();
   }
 
+  /**
+   * Compare the number of rows of each provided table name
+   * with the expected row counts
+   */
   async process(): Promise<ITestResponse[]> {
     const { qtr } = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,

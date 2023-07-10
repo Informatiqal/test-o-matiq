@@ -21,6 +21,9 @@ export class VariablesExists {
     return await Promise.all(promises).then((r) => r.flat());
   }
 
+  /**
+   * Check if the provided variables exists in the app
+   */
   async variablesExists(): Promise<ITestResponse[]> {
     return await Promise.all(
       this.variables.Exists.map(async (t) => {
@@ -49,6 +52,9 @@ export class VariablesExists {
     );
   }
 
+  /**
+   * Check if the provided variables do not exists in the app
+   */
   async variablesDoNotExists(): Promise<ITestResponse[]> {
     return await Promise.all(
       this.variables.DoNotExists.map(async (t) => {

@@ -27,6 +27,10 @@ export class DataModel {
     return await Promise.all(promises);
   }
 
+  /**
+   * Check if the provided fields exists in the data model
+   * Fields content is not checked
+   */
   private async field() {
     const fields = await this.app.mGetFields();
 
@@ -54,6 +58,10 @@ export class DataModel {
     };
   }
 
+  /**
+   * Check if the provided tables exists in the data model
+   * Tables content is not checked
+   */
   private async table() {
     const tables = await this.app.mGetTables();
 
@@ -81,6 +89,9 @@ export class DataModel {
     };
   }
 
+  /**
+   * Check if the data mode have synthetic keys
+   */
   private async syntheticKeys() {
     const tables = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,
@@ -128,6 +139,9 @@ export class DataModel {
     };
   }
 
+  /**
+   * Check if alwaysOneSelected is present for the provided fields
+   */
   private async alwaysOneSelected() {
     const allFields = await this.app.mGetFields();
 
