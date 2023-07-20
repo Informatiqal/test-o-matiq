@@ -1,4 +1,4 @@
-import { ITable, ITestResponse } from "../../interface/Specs";
+import { ITable, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 import { operations } from "../../util/common";
 
@@ -17,7 +17,7 @@ export class TableCounts {
    * Compare the number of rows of each provided table name
    * with the expected row counts
    */
-  async process(): Promise<ITestResponse[]> {
+  async process(): Promise<ITestMetaResult[]> {
     const { qtr } = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,
       {} as EngineAPI.ISize,

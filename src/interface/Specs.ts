@@ -67,6 +67,10 @@ export interface IMeta {
    * List of object id that should exists in the app
    */
   Object?: string[];
+  /**
+   * List of data connections that should exists
+   */
+  DataConnections?: string[];
 }
 
 export interface Details {
@@ -135,17 +139,16 @@ export interface ITable2 {
   result: Result;
 }
 
-// export interface IQObject {
-//   id: string;
-//   type: "sheet" | "visual";
-// }
-
 export type ISelection =
   | {
       /**
        * Clear all selections (perform `clearAll()`)
        */
       clearAll: boolean;
+      field?: undefined;
+      values?: undefined;
+      bookmark?: undefined;
+      byName?: undefined;
     }
   | {
       /**
@@ -162,62 +165,91 @@ export type ISelection =
        * { values: ["=Only('Test')"] }
        * ```
        */
-      values: string[];
+      values: (string | number)[];
+      clearAll?: undefined;
+      bookmark?: undefined;
+      byName?: undefined;
     }
   | {
       /**
        * NAME of the bookmark to be applied
        */
       bookmark: string;
+      clearAll?: undefined;
+      field?: undefined;
+      values?: undefined;
+      byName?: undefined;
     }
   | {
       /**
-       * Clear all selected values from provided fields list
+       * NAME of the bookmark to be applied
        */
-      clear: string[];
+      byName: string[];
+      bookmark?: undefined;
+      clearAll?: undefined;
+      field?: undefined;
+      values?: undefined;
     };
+// | {
+//     /**
+//      * Clear all selected values from provided fields list
+//      */
+//     clear: string[];
+//   };
 
-export interface IData {
+export interface TestCase {
   /**
-   * Unique name of the tests suite
+   * Name of the test case
    */
-  Name: string;
+  name: string;
+  /**
+   * Longer text that describe the purpose of the test case
+   */
+  description?: string;
+  /**
+   * What is the type of the test  case
+   */
+  type: "scalar" | "list" | "table";
+  /**
+   * What selections to be applied before running the test
+   *
+   * WARNING: these selections will be applied AFTER the test group selections are applied (if any)
+   */
+  selections: ISelection[];
+  details: IScalar | IList | ITable;
+}
+
+export interface TestSuiteDefinition {
   /**
    * Descriptions of the tests
    */
-  Description?: string;
+  description?: string;
   /**
-   * What selections to be applied BEFORE running the test
+   * What selections to be applied BEFORE running EACH test case in the group
    *
    * Selections are applied one after another in order of appearance - first defined, fist selected
    */
-  Selections?: ISelection[];
+  selections?: ISelection[];
   /**
-   * List of data tests
+   * Test group specific properties
+   * These properties are applied to ALL test cases inside the group
    */
-  Tests?: {
-    /**
-     * Single expression
-     * ```
-     * sum(Sales) > 100;
-     * sum(Sales) != 100;
-     * ```
-     */
-    Scalar?: IScalar[];
-    /**
-     * Check for specific values presence in fields (and their state)
-     */
-    List?: IList[];
-    /**
-     * TBA
-     */
-    Table?: ITable2[];
+  properties?: {
+    clearAllBeforeEach?: boolean;
   };
+  /**
+   * List of test cases
+   */
+  tests: TestCase[];
+}
+
+export interface IData {
+  [k: string]: TestSuiteDefinition;
 }
 
 export interface Spec {
-  Meta?: IMeta;
-  Data: IData[];
+  meta?: IMeta;
+  data: IData;
 }
 
 // export enum IQState {
@@ -231,7 +263,7 @@ export interface Spec {
 //   XL = "eXcluded Locked",
 // }
 
-export interface Root {
+export interface Runbook {
   /**
    * Author name
    */
@@ -256,9 +288,14 @@ export interface Root {
    * version number of the document (e.g. 1, 1.1, 0.1.0, 1.2.1 etc.)
    */
   version?: string;
+  props?: IProps;
+  /**
+   * Emit debug messages
+   */
+  debug?: boolean;
 }
 
-export interface ITestResponse {
+export interface ITestMetaResult {
   name?: string;
   status?: boolean;
   message: string;
@@ -272,7 +309,36 @@ export interface IGroupResult {
   startTime: Date;
   endTime: Date;
   elapsedTime: number;
-  testResults: ITestResponse[];
+  testResults: ITestMetaResult[];
+}
+
+export interface TestEvaluationResult {
+  status: boolean;
+  name: string;
+  type: "scalar" | "list" | "table";
+  timings: {
+    start: string;
+    end: string;
+    elapsed: number;
+  };
+  message: string;
+  currentSelections: {
+    selections: qSelections[];
+    timings: {
+      start: string;
+      end: string;
+      elapsed: number;
+      message?: string;
+    };
+  };
+}
+
+export interface TestSuiteResult {
+  status: boolean;
+  tests: TestEvaluationResult[] | ITestMetaResult[];
+  totalTests: number;
+  failedTests: number;
+  totalElapsedTime: number;
 }
 
 export interface IEventError {
@@ -280,6 +346,13 @@ export interface IEventError {
   subGroup?: string;
   name: string;
   reason: string;
+}
+
+export interface IEventDebug {
+  // group: string;
+  // subGroup?: string;
+  name: string;
+  message: string;
 }
 
 export interface IEventGroupStartEnd {
@@ -290,4 +363,83 @@ export interface IEventGroupStartEnd {
   elapsedTime: number;
   totalTests: number;
   failedTests: number;
+}
+
+// props should have ONE OF byName or field <-> name
+export interface IProps {
+  selections: IPropsSelections;
+}
+
+export type IPropsSelections = {
+  [k: string]: IPropsSelection[];
+};
+
+export type IPropsSelection =
+  | {
+      // name: string;
+      description?: string;
+      byName?: undefined;
+    }
+  | (Selection | SelectionByName);
+
+export type Selection = {
+  field: string;
+  values: string[];
+  byName?: undefined;
+  // name: string;
+};
+
+export type SelectionByName = {
+  byName: string[];
+  field?: undefined;
+  values?: undefined;
+  // name: string;
+};
+
+export type IPropsSelectionArray = {
+  name: string;
+  selections: (
+    | {
+        name: string;
+        description?: string;
+        byName?: undefined;
+      }
+    | (SelectionArray | SelectionByNameArray)
+  )[];
+};
+
+export type SelectionArray = {
+  field: string;
+  values: string[];
+  byName?: undefined;
+  name: string;
+};
+
+export type SelectionByNameArray = {
+  byName: string[];
+  field?: undefined;
+  values?: undefined;
+  name: string;
+};
+
+export interface TestDetails {
+  //
+}
+
+export interface qSelections {
+  qTotal: number;
+  qField: string;
+  qSelectedCount: number;
+  qSelected: string;
+  qRangeInfo: [];
+  qSortIndex: number;
+}
+
+export interface ICurrentSelections extends EngineAPI.IGenericBaseLayout {
+  qSelectionInfo: {};
+  qSelectionObject: {
+    qBackCount: number;
+    qForwardCount: number;
+    qSelections: qSelections[];
+  };
 }

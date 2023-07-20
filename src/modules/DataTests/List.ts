@@ -1,7 +1,7 @@
-import { IGroupResult, IList, ITestResponse } from "../interface/Specs";
-import { EventsBus } from "../util/EventBus";
-import { concatResults } from "../util/common";
-import { IAppMixin } from "../interface/Mixin";
+import { IGroupResult, IList, ITestMetaResult } from "../../interface/Specs";
+import { EventsBus } from "../../util/EventBus";
+import { concatResults } from "../../util/common";
+import { IAppMixin } from "../../interface/Mixin";
 
 export class List {
   private app: IAppMixin;
@@ -24,7 +24,7 @@ export class List {
   async run(): Promise<IGroupResult> {
     this.startTime = new Date();
 
-    const listResults: ITestResponse[] = await Promise.all(
+    const listResults: ITestMetaResult[] = await Promise.all(
       this.lists.map((s) => {
         return this.app
           .mCreateSessionListbox(s.name, {

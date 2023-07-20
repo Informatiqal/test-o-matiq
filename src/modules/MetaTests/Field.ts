@@ -1,4 +1,4 @@
-import { Field, ITestResponse } from "../../interface/Specs";
+import { Field, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 import { operations } from "../../util/common";
 
@@ -13,7 +13,7 @@ export class FieldCounts {
     this.emitter = new EventsBus();
   }
 
-  async process(): Promise<ITestResponse[]> {
+  async process(): Promise<ITestMetaResult[]> {
     return await Promise.all(
       this.fields.map(async (f) => {
         try {

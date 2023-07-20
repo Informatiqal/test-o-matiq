@@ -1,4 +1,4 @@
-import { IDataModel, ITestResponse } from "../../../interface/Specs";
+import { IDataModel, ITestMetaResult } from "../../../interface/Specs";
 import { EventsBus } from "../../../util/EventBus";
 import { concatResults } from "../../../util/common";
 import { IAppMixin } from "../../../interface/Mixin";
@@ -14,8 +14,8 @@ export class DataModel {
     this.emitter = new EventsBus();
   }
 
-  async process(): Promise<ITestResponse[]> {
-    let promises = [] as Promise<ITestResponse>[];
+  async process(): Promise<ITestMetaResult[]> {
+    let promises = [] as Promise<ITestMetaResult>[];
 
     if (this.dataModelData.Field) promises.push(this.field());
     if (this.dataModelData.Table) promises.push(this.table());

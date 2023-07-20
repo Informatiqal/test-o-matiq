@@ -1,10 +1,16 @@
-import { IAppMixin } from "../interface/Mixin";
-import { IGroupResult, IMeta, ITestResponse } from "../interface/Specs";
-import { DataModel } from "../modules/Meta/DataModel/index";
-import { FieldCounts } from "./Meta/Field";
-import { TableCounts } from "./Meta/Table";
-import { VariablesExists } from "./Meta/Variable";
-import { QObject } from "./Meta/Object";
+import { IAppMixin } from "../../interface/Mixin";
+import {
+  IGroupResult,
+  IMeta,
+  ITestMetaResult,
+  TestSuiteResult,
+} from "../../interface/Specs";
+import { DataModel } from "./DataModel/index";
+import { FieldCounts } from "./Field";
+import { TableCounts } from "./Table";
+import { VariablesExists } from "./Variable";
+import { QObject } from "./Object";
+import { DataConnections } from "./DataConnections";
 
 export class Meta {
   meta: IMeta;
@@ -15,7 +21,7 @@ export class Meta {
   private endTime: Date;
   private elapsedTime: number;
   private totalTests: number;
-  private testResults: ITestResponse[];
+  private testResults: ITestMetaResult[];
   // private qObject: QObject;
 
   constructor(meta: IMeta, app: IAppMixin) {
@@ -26,11 +32,11 @@ export class Meta {
     this.totalTests = 0;
   }
 
-  async run(): Promise<IGroupResult> {
+  async run(): Promise<TestSuiteResult> {
     this.startTime = new Date();
 
     // let promises: ITestResponse[] = [];
-    let promises = [] as Promise<ITestResponse[]>[];
+    let promises = [] as Promise<ITestMetaResult[]>[];
 
     if (this.meta.DataModel) {
       const dm = new DataModel(this.meta.DataModel, this.app);
@@ -60,7 +66,17 @@ export class Meta {
 
     if (this.meta.Object) {
       const qObject = new QObject(this.meta.Object, this.app);
+      this.totalTests += this.meta.Object.length;
       promises.push(qObject.run());
+    }
+
+    if (this.meta.DataConnections) {
+      const dataConnections = new DataConnections(
+        this.meta.DataConnections,
+        this.app
+      );
+      this.totalTests += this.meta.DataConnections.length;
+      promises.push(dataConnections.run());
     }
 
     const results = await (await Promise.all(promises)).flat();
@@ -77,13 +93,13 @@ export class Meta {
 
     return {
       status: !this.isFailedGroup,
-      group: "Meta",
+      // group: "Meta",
       totalTests: this.totalTests,
       failedTests: this.failedTests,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      elapsedTime: this.elapsedTime,
-      testResults: results,
+      // startTime: this.startTime,
+      // endTime: this.endTime,
+      totalElapsedTime: Math.abs(this.elapsedTime / 1000),
+      tests: results,
     };
   }
 }

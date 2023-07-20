@@ -1,5 +1,5 @@
-import { IGroupResult, ITable2, ITestResponse } from "../interface/Specs";
-import { EventsBus } from "../util/EventBus";
+import { IGroupResult, ITable2, ITestMetaResult } from "../../interface/Specs";
+import { EventsBus } from "../../util/EventBus";
 
 export class Table {
   private app: EngineAPI.IApp;
@@ -22,7 +22,7 @@ export class Table {
   async run(): Promise<IGroupResult> {
     this.startTime = new Date();
 
-    const tableResult: ITestResponse[] = await Promise.all(
+    const tableResult: ITestMetaResult[] = await Promise.all(
       this.table.map((t) => {
         const tableRowsConcat = t.result.Rows.map((r) => r.join(""));
         const objProps = this.generateObjProps(t.dimensions, t.measures);

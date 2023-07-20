@@ -1,4 +1,4 @@
-import { IMetaVariable, ITestResponse } from "../../interface/Specs";
+import { IMetaVariable, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 
 export class VariablesExists {
@@ -12,7 +12,7 @@ export class VariablesExists {
     this.emitter = new EventsBus();
   }
 
-  async process(): Promise<ITestResponse[]> {
+  async process(): Promise<ITestMetaResult[]> {
     let promises = [];
 
     if (this.variables.DoNotExists) promises.push(this.variablesDoNotExists());
@@ -24,7 +24,7 @@ export class VariablesExists {
   /**
    * Check if the provided variables exists in the app
    */
-  async variablesExists(): Promise<ITestResponse[]> {
+  async variablesExists(): Promise<ITestMetaResult[]> {
     return await Promise.all(
       this.variables.Exists.map(async (t) => {
         try {
@@ -55,7 +55,7 @@ export class VariablesExists {
   /**
    * Check if the provided variables do not exists in the app
    */
-  async variablesDoNotExists(): Promise<ITestResponse[]> {
+  async variablesDoNotExists(): Promise<ITestMetaResult[]> {
     return await Promise.all(
       this.variables.DoNotExists.map(async (t) => {
         try {

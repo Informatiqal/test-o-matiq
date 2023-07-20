@@ -5,7 +5,7 @@ const fs = require("fs");
 const config = {
   path: path.join(__dirname, "../src/interface/Specs.ts"),
   tsconfig: path.join(__dirname, "../../tsconfig.json"),
-  type: "Root",
+  type: "Runbook",
 };
 
 const schema_path = path.join(__dirname, "./schema.json");

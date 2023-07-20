@@ -24,6 +24,53 @@
         "version": {
           "type": "string",
           "description": "version number of the document (e.g. 1, 1.1, 0.1.0, 1.2.1 etc.)"
+        },
+        "props": {
+          "type": "object",
+          "properties": {
+            "selections": {
+              "type": "array",
+              "description": "Defined selections that can be used in the actual tests. Selections are made from top to bottom in sequence",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "select"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Unique identification of the selection"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Describe what the selection is about"
+                  },
+                  "select": {
+                    "type": "array",
+                    "anyOf": [
+                      {
+                        "items": {
+                          "$ref": "#/definitions/ISelection"
+                        }
+                      },
+                      {
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "byName": {
+                              "type": "string",
+                              "description": "Name of a previously defined selection"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
         }
       },
       "required": [
@@ -53,6 +100,7 @@
       "type": "object",
       "properties": {
         "DataModel": {
+          "description": "Data model specific test cases - fields, table, variable existence, always one selected is present for fields, synthetic key existence etc.",
           "$ref": "#/definitions/IDataModel"
         },
         "Field": {
