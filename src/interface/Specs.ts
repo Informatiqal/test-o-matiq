@@ -73,11 +73,7 @@ export interface IMeta {
   DataConnections?: string[];
 }
 
-export interface Options {
-  /**
-   * In which state the expression to be made. The default option is $
-   */
-  state?: string;
+export interface ScalarOptions {
   /**
    * What is the allowed tolerance/deviation between the expression and the result.
    *
@@ -95,6 +91,10 @@ export interface Options {
   //   expression?: string;
   //   result?: string;
   // };
+}
+
+export interface TableOptions {
+  blah: string;
 }
 
 export interface IScalar {
@@ -130,7 +130,6 @@ export interface IScalar {
   operator: IOperator;
   // TODO: deviation/difference?
   // deviation?: string;
-  options?: Options;
 }
 
 export interface IList {
@@ -145,18 +144,18 @@ export interface Measure {
 }
 
 export interface Result {
-  Columns: string[];
-  Rows: any[][];
+  columns: string[];
+  rows: any[][];
 }
 
-export interface ITable2 {
-  name: string;
-  description?: string;
+export interface ITableTestCase {
   dimensions: string[];
   // measures: Measure[];
   measures: string[];
-  sort?: string[];
   result: Result;
+  // options?: {
+  // sort?: string[];
+  // };
 }
 
 export type ISelection =
@@ -236,7 +235,13 @@ export interface TestCase {
    * WARNING: these selections will be applied AFTER the test group selections are applied (if any)
    */
   selections: ISelection[];
-  details: IScalar | IList | ITable;
+  details: IScalar | IList | ITableTestCase;
+  options?: {
+    /**
+     * In which state the expression to be made. The default option is $
+     */
+    state?: string;
+  } & (ScalarOptions | TableOptions);
 }
 
 export interface TestSuiteDefinition {

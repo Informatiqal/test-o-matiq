@@ -9,6 +9,7 @@ import {
   TestSuiteDefinition,
 } from "../../interface/Specs";
 import { IAppMixin } from "../../index.doc";
+import { Table } from "./Table";
 
 export class TestSuite {
   testSuite: TestSuiteDefinition;
@@ -18,7 +19,7 @@ export class TestSuite {
 
   constructor(
     testSuite: TestSuiteDefinition,
-    qlikApp: IAppMixin,
+    qlikApp: IAppMixin
     // propsSelections: IPropsSelections
   ) {
     this.testSuite = testSuite;
@@ -67,7 +68,9 @@ export class TestSuite {
     }
 
     if (test.type == "table") {
-      //TODO: implementation here
+      const table = new Table(test, this.qlikApp);
+
+      return await table.run();
     }
   }
 }

@@ -115,3 +115,58 @@ export class ScalarTableObject {
     return this.qApp.destroySessionObject(this.qObj.id);
   }
 }
+
+export class TableObject {
+  private qApp: IAppMixin;
+  private qObj: IGenericObject;
+
+  constructor(qApp: IAppMixin) {
+    this.qApp = qApp;
+  }
+
+  async evaluate(dimensions, measures, state: string) {
+    this.qObj = await this.create(dimensions, measures, state);
+  }
+
+  private async create(dimensions, measures, state?: string) {
+    const qObjProps = {
+      qInfo: {
+        qId: "",
+        qType: "test-o-matiq-table",
+      },
+      qExtendsId: "",
+      qMetaDef: {},
+      qStateName: state || "",
+      qHyperCubeDef: {
+        qDimensions: [],
+        qMeasures: [],
+        qInitialDataFetch: [
+          {
+            qTop: 0,
+            qLeft: 0,
+            qWidth: 1,
+            qHeight: 1,
+          },
+        ],
+      },
+    } as EngineAPI.IGenericObjectProperties;
+
+    qObjProps.qHyperCubeDef.qMeasures = measures.map((m) => ({
+      qDef: {
+        qDef: m,
+      },
+    }));
+
+    qObjProps.qHyperCubeDef.qDimensions = measures.map((d) => ({
+      qDef: {
+        qDef: d,
+      },
+    }));
+
+    return await this.qApp.createSessionObject(qObjProps);
+  }
+
+  async destroy() {
+    return this.qApp.destroySessionObject(this.qObj.id);
+  }
+}

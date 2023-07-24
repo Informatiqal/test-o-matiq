@@ -1,103 +1,113 @@
-import { IGroupResult, ITable2, ITestMetaResult } from "../../interface/Specs";
+import {
+  ITableTestCase,
+  ITestMetaResult,
+  TestCase,
+  TestEvaluationResult,
+} from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
+import { Timing } from "../../util/common";
+import { Selection } from "../Selections";
 
 export class Table {
   private app: EngineAPI.IApp;
-  private table: ITable2[];
+  private table: ITableTestCase;
+  private test: TestCase;
+  private selections: Selection;
   private emitter: EventsBus;
-  private failedTests: number;
-  private isFailedGroup: boolean;
-  private startTime: Date;
-  private endTime: Date;
-  private elapsedTime: number;
+  private timing: Timing;
 
-  constructor(table: ITable2[], app: EngineAPI.IApp) {
-    this.table = table;
+  constructor(test: TestCase, app: EngineAPI.IApp) {
+    this.table = test.details as ITableTestCase;
+    this.test = test;
     this.app = app;
     this.emitter = new EventsBus();
-    this.failedTests = 0;
-    this.isFailedGroup = false;
+    this.selections = Selection.getInstance();
   }
 
-  async run(): Promise<IGroupResult> {
-    this.startTime = new Date();
+  async run(): Promise<TestEvaluationResult> {
+    this.timing.start();
 
-    const tableResult: ITestMetaResult[] = await Promise.all(
-      this.table.map((t) => {
-        const tableRowsConcat = t.result.Rows.map((r) => r.join(""));
-        const objProps = this.generateObjProps(t.dimensions, t.measures);
-        let qlikObject: EngineAPI.IGenericObject;
+    // apply the required selections
+    const currentSelections = await this.applySelections();
 
-        return this.app
-          .createSessionObject(objProps)
-          .then((o) => {
-            qlikObject = o;
-            return o.getLayout();
-          })
-          .then((o) => {
-            const arrayData = this.hyperCubeToArray(
-              (o as any).qHyperCube.qDataPages
-            );
-
-            const arrayDataConcat = arrayData.map((b) => b.join(""));
-
-            if (arrayData.length != t.result.Rows.length) {
-              this.failedTests++;
-              this.isFailedGroup = true;
-              this.emitter.emit("testError", {
-                group: "Table",
-                name: t.name,
-                reason: `Expected ${t.result.Rows} but received ${arrayData.length}`,
-              });
-
-              return this.app.destroySessionObject(qlikObject.id).then((_) => ({
-                name: t.name,
-                status: false,
-                message: `Expected ${t.result.Rows} but received ${arrayData.length}`,
-              }));
-            }
-
-            const notFound = tableRowsConcat.filter(
-              (c) => !arrayDataConcat.includes(c)
-            );
-
-            const tableResultStatus = notFound.length > 0 ? false : true;
-
-            if (!tableResultStatus) {
-              this.failedTests++;
-              this.isFailedGroup = true;
-              this.emitter.emit("testError", {
-                group: "Table",
-                name: t.name,
-                reason: `${notFound.length} row(s) not found: ${notFound.join(
-                  ", "
-                )}`,
-              });
-            }
-
-            return this.app.destroySessionObject(qlikObject.id).then((_) => ({
-              name: t.name,
-              status: tableResultStatus,
-              message: !tableResultStatus
-                ? `${notFound.length} row(s) not found: ${notFound.join(", ")}`
-                : `Passed: All rows and values are present`,
-            }));
-          });
-      })
+    // const tableResult: ITestMetaResult[] = await Promise.all(
+    // this.table.map((t) => {
+    const tableRowsConcat = this.table.result.rows.map((r) => r.join(""));
+    const objProps = this.generateObjProps(
+      this.table.dimensions,
+      this.table.measures
     );
+    let qlikObject: EngineAPI.IGenericObject;
 
-    this.endTime = new Date();
-    this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
+    this.app
+      .createSessionObject(objProps)
+      .then((o) => {
+        qlikObject = o;
+        return o.getLayout();
+      })
+      .then((o) => {
+        const arrayData = this.hyperCubeToArray(
+          (o as any).qHyperCube.qDataPages
+        );
+
+        const arrayDataConcat = arrayData.map((b) => b.join(""));
+
+        if (arrayData.length != this.table.result.rows.length) {
+          // this.failedTests++;
+          // this.isFailedGroup = true;
+          this.emitter.emit("testError", {
+            group: "Table",
+            name: this.test.name,
+            reason: `Expected ${this.table.result.rows} but received ${arrayData.length}`,
+          });
+
+          return this.app.destroySessionObject(qlikObject.id).then((_) => ({
+            name: this.test.name,
+            status: false,
+            message: `Expected ${this.table.result.rows} but received ${arrayData.length}`,
+          }));
+        }
+
+        const notFound = tableRowsConcat.filter(
+          (c) => !arrayDataConcat.includes(c)
+        );
+
+        const tableResultStatus = notFound.length > 0 ? false : true;
+
+        // if (!tableResultStatus) {
+        //   this.failedTests++;
+        //   this.isFailedGroup = true;
+        //   this.emitter.emit("testError", {
+        //     group: "Table",
+        //     name: t.name,
+        //     reason: `${notFound.length} row(s) not found: ${notFound.join(
+        //       ", "
+        //     )}`,
+        //   });
+        // }
+
+        return this.app.destroySessionObject(qlikObject.id).then((_) => ({
+          name: this.test.name,
+          status: tableResultStatus,
+          message: !tableResultStatus
+            ? `${notFound.length} row(s) not found: ${notFound.join(", ")}`
+            : `Passed: All rows and values are present`,
+        }));
+      });
+    // })
+    // );
 
     return {
-      status: !this.isFailedGroup,
-      group: "Table",
-      totalTests: this.table.length,
-      failedTests: this.failedTests,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      elapsedTime: this.elapsedTime,
-      testResults: tableResult,
+      status: true,
+      name: this.test.name,
+      type: "scalar",
+      timings: {
+        start: this.timing.startTime,
+        end: this.timing.endTime,
+        elapsed: this.timing.elapsedTime,
+      },
+      message: "N/A",
+      currentSelections: currentSelections,
     };
   }
 
@@ -138,5 +148,21 @@ export class Table {
       .flat();
   }
 
-  private extractObjectCompleteData() {}
+  private async applySelections() {
+    if (this.test.selections)
+      return await this.selections.makeSelections(this.test.selections);
+
+    const currentSelections = await this.selections.getCurrentSelections();
+
+    return {
+      selections: currentSelections,
+      timings: {
+        start: "n/a",
+        end: "n/a",
+        elapsed: 0,
+        message:
+          "No timings to be captured. No selections to be made. Returning the currently active selections",
+      },
+    };
+  }
 }
