@@ -1,15 +1,10 @@
 import Ajv from "ajv";
 import {
-  // IGroupResult,
-  // IScalar,
-  // TestEvaluationResult,
-  IData,
   IPropsSelectionArray,
-  IPropsSelections,
   IScalar,
   ISelection,
+  ITableTestCase,
   Runbook,
-  TestCase,
   TestSuiteResult,
 } from "./interface/Specs";
 import { Selection, SelectionValidation } from "./modules/Selections";
@@ -17,24 +12,18 @@ import { EventsBus } from "./util/EventBus";
 import { TestSuite } from "./modules/DataTests";
 import { Meta } from "./modules/MetaTests";
 import { Engine } from "./util/Engine";
-// import { Scalar } from "./modules/DataTests/Scalar";
-// import { List } from "./modules/DataTests/List";
-// import { Table } from "./modules/Table";
 
 import { IAppMixin } from "./interface/Mixin";
 import * as schema from "./schema/schema.json" assert { type: "json" };
 
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
 
-// export namespace TestOMatiq {
 export class TestOMatiq {
   specs: Runbook;
   emitter: EventsBus;
   testResults: { [k: string]: TestSuiteResult };
   qlikApp: IAppMixin;
   engine: Engine;
-  // testGroups: string[];
-  // qlik: Qlik;
 
   constructor(specs: Runbook, qlikApp: IAppMixin) {
     this.specs = specs;
@@ -82,13 +71,14 @@ export class TestOMatiq {
         options.testSuites.map((k) => [k, this.specs.spec.data[k]])
       );
 
-    // this.validateTaskOperatorResult();
+    await this.validateExpressions();
     if (this.specs.props?.selections) await this.validateSelections();
+    // this.validateTaskOperatorResult();
+
     if (this.specs.props.variables) await this.createSessionVariables();
     if (this.specs.spec.meta) await this.processMeta();
     if (this.specs.spec.data) await this.runTestSuites();
 
-    // return this.testResults.flat();
     return this.testResults;
   }
 
@@ -115,78 +105,6 @@ export class TestOMatiq {
     // });
     this.emitter.emit("group:result", metaResult);
     this.testResults["Meta"] = metaResult;
-  }
-
-  private async processScalar(dataTest: TestCase) {
-    // this.emitter.emit("group", {
-    //   group: "Scalar",
-    //   message: `Starting Scalar tests for "${dataTest.name}"`,
-    //   isFinished: false,
-    //   status: true,
-    //   elapsedTime: -1,
-    //   totalTests: -1,
-    //   failedTests: -1,
-    // });
-    // const scalar = new Scalar(dataTest.details as IScalar, this.qlikApp);
-    // const scalarResult = await scalar.run();
-    // this.emitter.emit("group", {
-    //   group: "Scalar",
-    //   message: `Scalar tests finished`,
-    //   isFinished: true,
-    //   status: scalarResult.status,
-    //   // elapsedTime: scalarResult.elapsedTime,
-    //   // totalTests: scalarResult.totalTests,
-    //   // failedTests: scalarResult.failedTests,
-    // });
-    // this.emitter.emit("group:result", scalarResult);
-    // this.testResults.push(scalarResult);
-  }
-
-  private async processList(dataTest: IData) {
-    // const list = new List(dataTest.Tests.List, this.qlikApp);
-    // const listResult = await list.run();
-    // this.emitter.emit("group", {
-    //   group: "Scalar",
-    //   message: `Scalar tests finished`,
-    //   isFinished: true,
-    //   status: scalarResult.status,
-    //   elapsedTime: scalarResult.elapsedTime,
-    //   totalTests: scalarResult.totalTests,
-    //   failedTests: scalarResult.failedTests,
-    // });
-    // this.emitter.emit("group:result", listResult);
-    // this.testResults.push(listResult);
-  }
-
-  private async processTable(dataTest: IData) {
-    // if (this.specs.spec.Table) {
-    //   this.emitter.emit("group", {
-    //     group: "Table",
-    //     message: `Starting Table tests ...`,
-    //     isFinished: false,
-    //     status: true,
-    //     elapsedTime: -1,
-    //     totalTests: -1,
-    //     failedTests: -1,
-    //   });
-    //   const table = new Table(this.specs.spec.Table, this.qlikApp);
-    //   const tableResult = await table.run();
-    //   this.emitter.emit("group", {
-    //     group: "Table",
-    //     message: `Table tests finished`,
-    //     isFinished: true,
-    //     status: tableResult.status,
-    //     elapsedTime: tableResult.elapsedTime,
-    //     totalTests: tableResult.totalTests,
-    //     failedTests: tableResult.failedTests,
-    //   });
-    //   this.emitter.emit("group:result", tableResult);
-    //   this.testResults.push(tableResult);
-    // }
-  }
-
-  private async processTestSuites() {
-    //
   }
 
   /**
@@ -261,6 +179,82 @@ export class TestOMatiq {
     return;
   }
 
+  /**
+   * Once the app is open loop through the expressions and validate them
+   * (for syntax and semantic errors)
+   */
+  private async validateExpressions(): Promise<void> {
+    const _this = this;
+    let failedValidations = [];
+
+    // validate all session variables
+    if (this.specs.props.variables) {
+      await Promise.all(
+        Object.entries(this.specs.props.variables).map(
+          ([varName, varDefinition]) => {
+            return _this.engine
+              .checkExpression(varDefinition)
+              .then((v) => null)
+              .catch(
+                (e) =>
+                  `Session variable "${varName}" validation failed -> ${e.message}`
+              );
+          }
+        )
+      )
+        .then((validations) => validations.filter((v) => v != null))
+        .then((validations) => {
+          failedValidations.push(...validations);
+        });
+    }
+
+    // get all possible tests
+    const availableTests = Object.entries(this.specs.spec.data)
+      .map(([_, tsDef]) => tsDef.tests)
+      .flat();
+
+    await Promise.all(
+      availableTests.map((test) => {
+        // TODO: validate the possible expressions in the result property
+        // validate scalar tests
+        if (test.type == "scalar") {
+          return _this.engine
+            .checkExpression((test.details as IScalar).expression)
+            .then((v) => null)
+            .catch(
+              (e) =>
+                `Test "${test.name}" expression validation failed -> ${e.message}`
+            );
+        }
+
+        // TODO: to validate the possible calculated dimensions
+        // validate tables measures expressions
+        if (test.type == "table") {
+          return Promise.all(
+            (test.details as ITableTestCase).measures.map((m) => {
+              return _this.engine
+                .checkExpression(m)
+                .then((v) => null)
+                .catch(
+                  (e) =>
+                    `Test "${test.name}" measure validation failed -> ${e.message}`
+                );
+            })
+          ).then((validations) => validations.filter((v) => v != null));
+        }
+      })
+    )
+      .then((validations) => validations.filter((v) => v != null))
+      .then((validations) => {
+        failedValidations.push(...validations);
+      });
+
+    if (failedValidations.length > 0)
+      throw new Error(
+        `Failed expression validations:\n${failedValidations.join("\n")}`
+      );
+  }
+
   private propSelectionsToArray() {
     return Object.entries(this.specs.props?.selections).map(
       ([name, selection]) => ({
@@ -270,29 +264,10 @@ export class TestOMatiq {
     );
   }
 
-  private validateTaskOperatorResult() {
-    // const availableTests = Object.entries(this.specs.spec.data)
-    //   .map(([tsName, tsDef]) => tsDef.tests)
-    //   .flat();
-    // const f = availableTests
-    //   .filter((t) => t.type == "scalar")
-    //   .map((t) => {
-    //     const details = t.details as IScalar;
-    //   });
-  }
-
   private async createSessionVariables() {
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables
     )) {
-      try {
-        await this.engine.checkExpression(varDefinition);
-      } catch (e) {
-        throw new Error(
-          `Session variable "${varName}" validation failed -> ${e.message}`
-        );
-      }
-
       await this.qlikApp.createSessionVariable({
         qName: varName,
         qDefinition: varDefinition,
@@ -340,5 +315,16 @@ export class TestOMatiq {
       // if (dataTest.Tests.Scalar) await this.processScalar(dataTest);
       // if (dataTest.Tests.List) await this.processList(dataTest);
     }
+  }
+
+  private validateTaskOperatorResult() {
+    // const availableTests = Object.entries(this.specs.spec.data)
+    //   .map(([tsName, tsDef]) => tsDef.tests)
+    //   .flat();
+    // const f = availableTests
+    //   .filter((t) => t.type == "scalar")
+    //   .map((t) => {
+    //     const details = t.details as IScalar;
+    //   });
   }
 }

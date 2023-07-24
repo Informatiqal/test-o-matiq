@@ -124,8 +124,22 @@ export class TableObject {
     this.qApp = qApp;
   }
 
-  async evaluate(dimensions, measures, state: string) {
+  async evaluate(dimensions: string[], measures: string[], state?: string) {
     this.qObj = await this.create(dimensions, measures, state);
+    const qObjData = await this.qObj.getHyperCubeData("/qHyperCubeDef", [
+      {
+        qLeft: 0,
+        qTop: 0,
+        qWidth: dimensions.length + measures.length,
+        qHeight: 20,
+      },
+    ]);
+
+    // if no data in the hypercube then return null
+    // TODO: to check how returning null is behaving with the comparison operations
+    if (qObjData[0].qMatrix.length == 0) return null;
+
+    return qObjData[0].qMatrix;
   }
 
   private async create(dimensions, measures, state?: string) {
@@ -153,13 +167,13 @@ export class TableObject {
 
     qObjProps.qHyperCubeDef.qMeasures = measures.map((m) => ({
       qDef: {
-        qDef: m,
+        qDef: m.toString().startsWith("=") ? m : `=${m}`,
       },
     }));
 
-    qObjProps.qHyperCubeDef.qDimensions = measures.map((d) => ({
+    qObjProps.qHyperCubeDef.qDimensions = dimensions.map((d) => ({
       qDef: {
-        qDef: d,
+        qFieldDefs: [d],
       },
     }));
 
