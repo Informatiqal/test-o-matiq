@@ -1,4 +1,4 @@
-export type IOperator = "<" | ">" | ">=" | "<=" | "==" | "!=";
+export type IOperator = "<" | ">" | ">=" | "<=" | "==" | "!=" | "=" | "<>";
 
 export interface IDataModel {
   /**
@@ -73,8 +73,28 @@ export interface IMeta {
   DataConnections?: string[];
 }
 
-export interface Details {
-  state: string;
+export interface Options {
+  /**
+   * In which state the expression to be made. The default option is $
+   */
+  state?: string;
+  /**
+   * What is the allowed tolerance/deviation between the expression and the result.
+   *
+   * Even when "operator" property is "=" the tolerance will be respected.
+   *
+   * For example: +- 100, +- 5%, 20%, -3%
+   */
+  tolerance?: string;
+  /**
+   * What format to be applied for the expression or the result before comparison is made
+   *
+   * This section is optional. Formatting can be applied directly to the expression and result code
+   */
+  // formatting?: {
+  //   expression?: string;
+  //   result?: string;
+  // };
 }
 
 export interface IScalar {
@@ -103,14 +123,14 @@ export interface IScalar {
    * result: "=sum(100)"
    * ```
    */
-  result: string | number;
+  result?: string | number;
   /**
    * TBA
    */
   operator: IOperator;
   // TODO: deviation/difference?
   // deviation?: string;
-  details?: Details;
+  options?: Options;
 }
 
 export interface IList {
@@ -367,8 +387,24 @@ export interface IEventGroupStartEnd {
 
 // props should have ONE OF byName or field <-> name
 export interface IProps {
-  selections: IPropsSelections;
+  /**
+   * Pre-define selections.
+   *
+   * These selections can be referenced in the tests.
+   */
+  selections?: IPropsSelections;
+  /**
+   * Define SESSION variables that can be used during the test suite execution.
+   *
+   * Make sure that the name of the session variables is not overlapping
+   * with an existing document variable
+   */
+  variables?: IPropsVariables;
 }
+
+export type IPropsVariables = {
+  [k: string]: string;
+};
 
 export type IPropsSelections = {
   [k: string]: IPropsSelection[];
