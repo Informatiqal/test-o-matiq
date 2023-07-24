@@ -6,6 +6,7 @@ import {
   IData,
   IPropsSelectionArray,
   IPropsSelections,
+  IScalar,
   ISelection,
   Runbook,
   TestCase,
@@ -15,6 +16,7 @@ import { Selection, SelectionValidation } from "./modules/Selections";
 import { EventsBus } from "./util/EventBus";
 import { TestSuite } from "./modules/DataTests";
 import { Meta } from "./modules/MetaTests";
+import { Engine } from "./util/Engine";
 // import { Scalar } from "./modules/DataTests/Scalar";
 // import { List } from "./modules/DataTests/List";
 // import { Table } from "./modules/Table";
@@ -30,6 +32,7 @@ export class TestOMatiq {
   emitter: EventsBus;
   testResults: { [k: string]: TestSuiteResult };
   qlikApp: IAppMixin;
+  engine: Engine;
   // testGroups: string[];
   // qlik: Qlik;
 
@@ -46,6 +49,8 @@ export class TestOMatiq {
     let selections = Selection.getInstance(this.qlikApp);
     selections.setPropsSelections(selectionsProps as IPropsSelectionArray[]);
     // selections.setDebug(this.specs.debug ? this.specs.debug : false);
+
+    this.engine = Engine.getInstance(this.qlikApp);
 
     // this.testGroups = Object.entries(specs.spec).map((value) =>
     //   value[0].toString()
@@ -77,47 +82,11 @@ export class TestOMatiq {
         options.testSuites.map((k) => [k, this.specs.spec.data[k]])
       );
 
-    await this.validateSelections();
-
+    // this.validateTaskOperatorResult();
+    if (this.specs.props?.selections) await this.validateSelections();
+    if (this.specs.props.variables) await this.createSessionVariables();
     if (this.specs.spec.meta) await this.processMeta();
-
-    if (this.specs.spec.data) {
-      for (let [testSuiteName, testSuiteDefinition] of Object.entries(
-        this.specs.spec.data
-      )) {
-        const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
-
-        const testResults = await testSuite.performTests();
-
-        // if at least one if the tests is false then the overall status
-        // of the test suite is false as well
-        this.testResults[testSuiteName] = {
-          status:
-            testResults.map((t) => t.status).some((s) => s == false) == false
-              ? true
-              : false,
-          totalTests: testSuiteDefinition.tests.length,
-          failedTests: testResults.filter((t) => t.status == false).length,
-          totalElapsedTime: parseFloat(
-            testResults
-              .reduce((acc, testResult) => acc + testResult.timings.elapsed, 0)
-              .toFixed(2)
-          ),
-          tests: testResults,
-        };
-
-        // for (let test of testSuite.tests) {
-        // if (test.type == "scalar") this.processScalar(test);
-        // }
-        // if (dataTest.Selections) {
-        //   // TODO: emit selections
-        //   const selection = new Selection(dataTest.Selections, this.qlikApp);
-        //   const makeSelections = await selection.makeSelections();
-        // }
-        // if (dataTest.Tests.Scalar) await this.processScalar(dataTest);
-        // if (dataTest.Tests.List) await this.processList(dataTest);
-      }
-    }
+    if (this.specs.spec.data) await this.runTestSuites();
 
     // return this.testResults.flat();
     return this.testResults;
@@ -220,8 +189,15 @@ export class TestOMatiq {
     //
   }
 
+  /**
+   * Validate if:
+   *
+   * - the provided bookmarks exists in the app
+   * - selections fields exists in the app
+   * - byName selections exists in props section
+   */
   private async validateSelections() {
-    const selectionsProps = this.specs.props?.selections
+    const selectionsProps = this.specs.props.selections
       ? this.propSelectionsToArray()
       : [];
 
@@ -292,5 +268,77 @@ export class TestOMatiq {
         selections: selection,
       })
     );
+  }
+
+  private validateTaskOperatorResult() {
+    // const availableTests = Object.entries(this.specs.spec.data)
+    //   .map(([tsName, tsDef]) => tsDef.tests)
+    //   .flat();
+    // const f = availableTests
+    //   .filter((t) => t.type == "scalar")
+    //   .map((t) => {
+    //     const details = t.details as IScalar;
+    //   });
+  }
+
+  private async createSessionVariables() {
+    for (let [varName, varDefinition] of Object.entries(
+      this.specs.props.variables
+    )) {
+      try {
+        await this.engine.checkExpression(varDefinition);
+      } catch (e) {
+        throw new Error(
+          `Session variable "${varName}" validation failed -> ${e.message}`
+        );
+      }
+
+      await this.qlikApp.createSessionVariable({
+        qName: varName,
+        qDefinition: varDefinition,
+        qIncludeInBookmark: false,
+        qInfo: {
+          qType: "test-o-matiq-variable",
+        },
+      });
+    }
+  }
+
+  private async runTestSuites() {
+    for (let [testSuiteName, testSuiteDefinition] of Object.entries(
+      this.specs.spec.data
+    )) {
+      const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
+
+      const testResults = await testSuite.performTests();
+
+      // if at least one if the tests is false then the overall status
+      // of the test suite is false as well
+      this.testResults[testSuiteName] = {
+        status:
+          testResults.map((t) => t.status).some((s) => s == false) == false
+            ? true
+            : false,
+        totalTests: testSuiteDefinition.tests.length,
+        failedTests: testResults.filter((t) => t.status == false).length,
+        totalElapsedTime: parseFloat(
+          testResults
+            .reduce((acc, testResult) => acc + testResult.timings.elapsed, 0)
+            .toFixed(2)
+        ),
+        tests: testResults,
+      };
+
+      // for (let test of testSuite.tests) {
+      // if (test.type == "scalar") this.processScalar(test);
+      // }
+      // if (dataTest.Selections) {
+      //   // TODO: emit selections
+      //   const selection = new Selection(dataTest.Selections, this.qlikApp);
+      //   const makeSelections = await selection.makeSelections();
+      // }
+      // if (dataTest.Tests.Scalar) await this.processScalar(dataTest);
+      // if (dataTest.Tests.List) await this.processList(dataTest);
+    }
   }
 }

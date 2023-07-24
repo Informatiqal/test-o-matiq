@@ -4,6 +4,7 @@ import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
 import { Selection } from "../Selections";
 import { IAppMixin } from "../../index.doc";
+import { ScalarTableObject } from "../../util/Engine";
 
 export class Scalar {
   private app: EngineAPI.IApp;
@@ -26,10 +27,13 @@ export class Scalar {
   async run(): Promise<TestEvaluationResult> {
     this.timing.start();
 
+    // apply the required selections
     const currentSelections = await this.applySelections();
 
+    // calculate the expression (left side)
     const leftSide = await this.evaluateExpression(this.scalar.expression);
 
+    // calculate the expected result (right side)
     const rightSide = (this.scalar.result as string).toString().startsWith("=")
       ? await this.evaluateExpression(this.scalar.result as string)
       : this.scalar.result;
@@ -73,9 +77,22 @@ export class Scalar {
   }
 
   private async evaluateExpression(expression: string) {
-    return await this.app
-      .evaluateEx(expression.startsWith("=") ? expression : `= ${expression}`)
-      .then((r) => (r.qIsNumeric ? r.qNumber : r.qText));
+    const scalarTable = new ScalarTableObject(this.app);
+    const result = await scalarTable.evaluate(expression);
+
+    // try and destroy the session object
+    // its not a big deal if this operation fails for some reason
+    // the result is the important one here
+    // and its a session object. It will be destroyed anyway when the
+    // connection is closed
+    try {
+      await scalarTable.destroy();
+    } catch (e) {}
+
+    return result;
+    // return await this.app
+    //   .evaluateEx(expression.startsWith("=") ? expression : `= ${expression}`)
+    //   .then((r) => (r.qIsNumeric ? r.qNumber : r.qText));
   }
 
   private async applySelections() {
