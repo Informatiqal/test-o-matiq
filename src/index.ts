@@ -240,11 +240,11 @@ export class TestOMatiq {
                     `Test "${test.name}" measure validation failed -> ${e.message}`
                 );
             })
-          ).then((validations) => validations.filter((v) => v != null));
+          ).then((validations) => validations.flat().filter((v) => v != null));
         }
       })
     )
-      .then((validations) => validations.filter((v) => v != null))
+      .then((validations) => validations.flat().filter((v) => v != null))
       .then((validations) => {
         failedValidations.push(...validations);
       });
