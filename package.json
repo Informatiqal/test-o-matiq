@@ -58,7 +58,7 @@
     "@types/mocha": "10.0.1",
     "@types/node": "20.4.4",
     "@types/qlik-engineapi": "^12.67.13",
-    "chai": "4.3.7",
+    "chai": "4.3.8",
     "dotenv": "16.3.1",
     "esm": "^3.2.25",
     "nyc": "15.1.0",
