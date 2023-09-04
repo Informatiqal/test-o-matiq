@@ -67,7 +67,7 @@
     "ts-json-schema-generator": "^1.2.0",
     "ts-node": "10.9.1",
     "typed-emitter": "^2.1.0",
-    "typedoc": "0.24.8",
+    "typedoc": "0.25.1",
     "typescript": "5.0.4",
     "vitest": "^0.33.0",
     "ws": "^8.13.0"
