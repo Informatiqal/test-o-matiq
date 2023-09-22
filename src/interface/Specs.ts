@@ -144,15 +144,15 @@ export interface Measure {
 }
 
 export interface Result {
-  columns: string[];
-  rows: any[][];
+  // columns: string[];
+  // rows: any[][];
 }
 
 export interface ITableTestCase {
   dimensions: string[];
   // measures: Measure[];
   measures: string[];
-  result: Result;
+  result: any[][];
   // options?: {
   // sort?: string[];
   // };
@@ -235,6 +235,10 @@ export interface TestCase {
    * WARNING: these selections will be applied AFTER the test group selections are applied (if any)
    */
   selections: ISelection[];
+  /**
+   * If true the test will not be performed
+   */
+  skip?: boolean;
   details: IScalar | IList | ITableTestCase;
   options?: {
     /**
@@ -261,6 +265,7 @@ export interface TestSuiteDefinition {
    */
   properties?: {
     clearAllBeforeEach?: boolean;
+    skip?: boolean;
   };
   /**
    * List of test cases
