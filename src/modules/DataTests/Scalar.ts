@@ -31,11 +31,11 @@ export class Scalar {
     const currentSelections = await this.applySelections();
 
     // calculate the expression (left side)
-    const leftSide = await this.evaluateExpression(this.scalar.expression);
+    const leftSide = await this.evaluate(this.scalar.expression);
 
     // calculate the expected result (right side)
     const rightSide = (this.scalar.result as string).toString().startsWith("=")
-      ? await this.evaluateExpression(this.scalar.result as string)
+      ? await this.evaluate(this.scalar.result as string)
       : this.scalar.result;
 
     // compare the evaluated result with the expected
@@ -76,7 +76,7 @@ export class Scalar {
     };
   }
 
-  private async evaluateExpression(expression: string) {
+  private async evaluate(expression: string) {
     const scalarTable = new ScalarTableObject(this.app);
     const result = await scalarTable.evaluate(expression);
 

@@ -115,3 +115,72 @@ export class ScalarTableObject {
     return this.qApp.destroySessionObject(this.qObj.id);
   }
 }
+
+export class TableObject {
+  private qApp: IAppMixin;
+  private qObj: IGenericObject;
+
+  constructor(qApp: IAppMixin) {
+    this.qApp = qApp;
+  }
+
+  async evaluate(dimensions: string[], measures: string[], state?: string) {
+    this.qObj = await this.create(dimensions, measures, state);
+    const qObjData = await this.qObj.getHyperCubeData("/qHyperCubeDef", [
+      {
+        qLeft: 0,
+        qTop: 0,
+        qWidth: dimensions.length + measures.length,
+        qHeight: 20,
+      },
+    ]);
+
+    // if no data in the hypercube then return null
+    // TODO: to check how returning null is behaving with the comparison operations
+    if (qObjData[0].qMatrix.length == 0) return null;
+
+    return qObjData[0].qMatrix;
+  }
+
+  private async create(dimensions, measures, state?: string) {
+    const qObjProps = {
+      qInfo: {
+        qId: "",
+        qType: "test-o-matiq-table",
+      },
+      qExtendsId: "",
+      qMetaDef: {},
+      qStateName: state || "",
+      qHyperCubeDef: {
+        qDimensions: [],
+        qMeasures: [],
+        qInitialDataFetch: [
+          {
+            qTop: 0,
+            qLeft: 0,
+            qWidth: 1,
+            qHeight: 1,
+          },
+        ],
+      },
+    } as EngineAPI.IGenericObjectProperties;
+
+    qObjProps.qHyperCubeDef.qMeasures = measures.map((m) => ({
+      qDef: {
+        qDef: m.toString().startsWith("=") ? m : `=${m}`,
+      },
+    }));
+
+    qObjProps.qHyperCubeDef.qDimensions = dimensions.map((d) => ({
+      qDef: {
+        qFieldDefs: [d],
+      },
+    }));
+
+    return await this.qApp.createSessionObject(qObjProps);
+  }
+
+  async destroy() {
+    return this.qApp.destroySessionObject(this.qObj.id);
+  }
+}
