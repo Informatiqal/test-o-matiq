@@ -83,9 +83,9 @@ export class TestSuite {
     }
 
     // Table will be disabled at the moment https://github.com/Informatiqal/test-o-matiq/issues/145
-    if (test.type == "table") {
-      // const table = new Table(test, this.qlikApp);
-      // return await table.run();
-    }
+    // if (test.type == "table") {
+    // const table = new Table(test, this.qlikApp);
+    // return await table.run();
+    // }
   }
 }

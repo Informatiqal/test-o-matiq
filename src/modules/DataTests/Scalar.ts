@@ -5,22 +5,24 @@ import { Timing } from "../../util/common";
 import { Selection } from "../Selections";
 import { IAppMixin } from "../../index.doc";
 import { ScalarTableObject } from "../../util/Engine";
+import { DataTestsBase } from "./BaseClass";
 
-export class Scalar {
+export class Scalar extends DataTestsBase {
   private app: EngineAPI.IApp;
-  private scalar: IScalar;
-  private test: TestCase;
-  private selections: Selection;
+  private testDetails: IScalar;
+  test: TestCase;
+  selections: Selection;
   private emitter: EventsBus;
   private timing: Timing;
 
   constructor(test: TestCase, app: IAppMixin) {
+    super();
+
     this.test = test;
-    this.scalar = test.details as IScalar;
+    this.selections = Selection.getInstance();
+    this.testDetails = test.details as IScalar;
     this.app = app;
     this.emitter = new EventsBus();
-    this.selections = Selection.getInstance();
-
     this.timing = new Timing();
   }
 
@@ -31,16 +33,18 @@ export class Scalar {
     const currentSelections = await this.applySelections();
 
     // calculate the expression (left side)
-    const leftSide = await this.evaluate(this.scalar.expression);
+    const leftSide = await this.evaluate(this.testDetails.expression);
 
     // calculate the expected result (right side)
-    const rightSide = (this.scalar.result as string).toString().startsWith("=")
-      ? await this.evaluate(this.scalar.result as string)
-      : this.scalar.result;
+    const rightSide = (this.testDetails.result as string)
+      .toString()
+      .startsWith("=")
+      ? await this.evaluate(this.testDetails.result as string)
+      : this.testDetails.result;
 
     // compare the evaluated result with the expected
     const testStatus = operations[
-      this.scalar.operator ? this.scalar.operator : "=="
+      this.testDetails.operator ? this.testDetails.operator : "=="
     ](leftSide, rightSide);
 
     this.timing.stop();
@@ -52,8 +56,8 @@ export class Scalar {
     // this.isFailedGroup = true;
     // this.emitter.emit("testError", {
     //   group: "Scalar",
-    //   name: this.scalar.name,
-    //   reason: `Failed: ${leftSide} ${this.scalar.operator} ${rightSide}`,
+    //   name: this.testDetails.name,
+    //   reason: `Failed: ${leftSide} ${this.testDetails.operator} ${rightSide}`,
     // });
     // }
 
@@ -70,8 +74,12 @@ export class Scalar {
         elapsed: this.timing.elapsedTime,
       },
       message: !testStatus
-        ? `Failed: ${leftSide} ${this.scalar.operator || "=="} ${rightSide}`
-        : `Passed: ${leftSide} ${this.scalar.operator || "=="} ${rightSide}`,
+        ? `Failed: ${leftSide} ${
+            this.testDetails.operator || "=="
+          } ${rightSide}`
+        : `Passed: ${leftSide} ${
+            this.testDetails.operator || "=="
+          } ${rightSide}`,
       currentSelections: currentSelections,
     };
   }
@@ -93,23 +101,5 @@ export class Scalar {
     // return await this.app
     //   .evaluateEx(expression.startsWith("=") ? expression : `= ${expression}`)
     //   .then((r) => (r.qIsNumeric ? r.qNumber : r.qText));
-  }
-
-  private async applySelections() {
-    if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections);
-
-    const currentSelections = await this.selections.getCurrentSelections();
-
-    return {
-      selections: currentSelections,
-      timings: {
-        start: "n/a",
-        end: "n/a",
-        elapsed: 0,
-        message:
-          "No timings to be captured. No selections to be made. Returning the currently active selections",
-      },
-    };
   }
 }

@@ -1,23 +1,26 @@
-import { IList, TestCase, TestEvaluationResult } from "../../interface/Specs";
-import { Selection } from "../Selections";
-import { EventsBus } from "../../util/EventBus";
-import { Timing, concatResults } from "../../util/common";
 import { IAppMixin } from "../../interface/Mixin";
+import { EventsBus } from "../../util/EventBus";
+import { IList, TestCase, TestEvaluationResult } from "../../interface/Specs";
+import { Timing, concatResults } from "../../util/common";
+import { Selection } from "../../modules/Selections";
+import { DataTestsBase } from "./BaseClass";
 
-export class List {
+export class List extends DataTestsBase {
   private app: IAppMixin;
-  private list: IList;
-  private test: TestCase;
+  test: TestCase;
+  private testDetails: IList;
   private emitter: EventsBus;
-  private selections: Selection;
+  selections: Selection;
   private timing: Timing;
 
   constructor(test: TestCase, app: IAppMixin) {
+    super();
+
     this.test = test;
-    this.list = test.details as IList;
+    this.selections = Selection.getInstance();
+    this.testDetails = test.details as IList;
     this.app = app;
     this.emitter = new EventsBus();
-    this.selections = Selection.getInstance();
     this.timing = new Timing();
   }
 
@@ -28,7 +31,7 @@ export class List {
     const currentSelections = await this.applySelections();
 
     const listValues = await this.app
-      .mCreateSessionListbox(this.list.name, {
+      .mCreateSessionListbox(this.testDetails.name, {
         destroyOnComplete: true,
         getAllData: true,
       })
@@ -44,8 +47,10 @@ export class List {
     let testStatus = true;
     let testStatusMessage = "";
 
-    if (this.list.operation == "present") {
-      const notFound = this.list.values.filter((x) => !rawValues.includes(x));
+    if (this.testDetails.operation == "present") {
+      const notFound = this.testDetails.values.filter(
+        (x) => !rawValues.includes(x)
+      );
       if (notFound.length > 0) {
         testStatus = false;
         testStatusMessage = `Failed: Values not found - ${concatResults(
@@ -57,8 +62,10 @@ export class List {
       }
     }
 
-    if (this.list.operation == "missing") {
-      const found = this.list.values.filter((x) => rawValues.includes(x));
+    if (this.testDetails.operation == "missing") {
+      const found = this.testDetails.values.filter((x) =>
+        rawValues.includes(x)
+      );
 
       if (found.length > 0) {
         testStatus = false;
@@ -82,24 +89,6 @@ export class List {
       },
       message: testStatusMessage,
       currentSelections: currentSelections,
-    };
-  }
-
-  private async applySelections() {
-    if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections);
-
-    const currentSelections = await this.selections.getCurrentSelections();
-
-    return {
-      selections: currentSelections,
-      timings: {
-        start: "n/a",
-        end: "n/a",
-        elapsed: 0,
-        message:
-          "No timings to be captured. No selections to be made. Returning the currently active selections",
-      },
     };
   }
 }
