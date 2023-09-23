@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2023-09-23
+
+- lists testing is brought inline with the scalar testing codebase
+- table testing is turned off ... for now. [#145](https://github.com/Informatiqal/test-o-matiq/issues/145) is the issue to follow the progress. At the moment more analysis is needed. The initial impression is that table testing might be more complicated to implement than anticipated ... or at least some scope should be included instead of going in too much details (from where the complication comes)
+
 ## [0.3.0] - 2023-09-22
 
 - [#155](https://github.com/Informatiqal/test-o-matiq/issues/155) Ability to skip single tests and/or whole test suites

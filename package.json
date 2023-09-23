@@ -1,6 +1,6 @@
 {
   "name": "test-o-matiq",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Data testing for Qlik apps",
   "license": "MIT",
   "author": {
@@ -40,7 +40,8 @@
     "!renovate.json",
     "!tsconfig.test.json",
     "!.markdownlint.json",
-    "!dist/index.doc.d.ts"
+    "!dist/index.doc.d.ts",
+    "!Notes.md"
   ],
   "repository": {
     "type": "git",

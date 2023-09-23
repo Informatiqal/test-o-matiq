@@ -9,7 +9,8 @@ import {
   TestSuiteDefinition,
 } from "../../interface/Specs";
 import { IAppMixin } from "../../index.doc";
-import { Table } from "./Table";
+import { List } from "./List";
+// import { Table } from "./Table";
 
 export class TestSuite {
   testSuite: TestSuiteDefinition;
@@ -57,14 +58,13 @@ export class TestSuite {
   private async runTests() {
     for (let test of this.testSuite.tests) {
       // do not run the test if skip == true
-      if (test.skip && test.skip == true) {
+      if (!test.skip) {
+        const testResult: TestEvaluationResult = await this.runTest(test);
+
+        this.testsResults.push(testResult);
+      } else {
         // TODO: emit something here to indicate that this test was skipped
-        return;
       }
-
-      const testResult: TestEvaluationResult = await this.runTest(test);
-
-      this.testsResults.push(testResult);
     }
   }
 
@@ -74,12 +74,12 @@ export class TestSuite {
 
     if (test.type == "scalar") {
       const scalar = new Scalar(test, this.qlikApp);
-
       return await scalar.run();
     }
 
     if (test.type == "list") {
-      //TODO: implementation here
+      const list = new List(test, this.qlikApp);
+      return await list.run();
     }
 
     // Table will be disabled at the moment https://github.com/Informatiqal/test-o-matiq/issues/145

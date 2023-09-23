@@ -1,4 +1,14 @@
-export type IOperator = "<" | ">" | ">=" | "<=" | "==" | "!=" | "=" | "<>";
+export type IScalarOperator =
+  | "<"
+  | ">"
+  | ">="
+  | "<="
+  | "=="
+  | "!="
+  | "="
+  | "<>";
+
+export type IListOperator = "present" | "missing";
 
 export interface IDataModel {
   /**
@@ -33,7 +43,7 @@ export interface Field {
    *
    * @default ==
    */
-  operator?: IOperator;
+  operator?: IScalarOperator;
 }
 
 export interface ITable {
@@ -50,7 +60,7 @@ export interface ITable {
    *
    * @default ==
    */
-  operator?: IOperator;
+  operator?: IScalarOperator;
 }
 
 export interface IMetaVariable {
@@ -127,7 +137,7 @@ export interface IScalar {
   /**
    * TBA
    */
-  operator: IOperator;
+  operator: IScalarOperator;
   // TODO: deviation/difference?
   // deviation?: string;
 }
@@ -136,6 +146,7 @@ export interface IList {
   name: string;
   description?: string;
   values: string[];
+  operation: IListOperator;
 }
 
 export interface Measure {
@@ -228,7 +239,7 @@ export interface TestCase {
   /**
    * What is the type of the test  case
    */
-  type: "scalar" | "list" | "table";
+  type: "scalar" | "list"; //| "table";
   /**
    * What selections to be applied before running the test
    *

@@ -1,87 +1,105 @@
-import { IGroupResult, IList, ITestMetaResult } from "../../interface/Specs";
+import { IList, TestCase, TestEvaluationResult } from "../../interface/Specs";
+import { Selection } from "../Selections";
 import { EventsBus } from "../../util/EventBus";
-import { concatResults } from "../../util/common";
+import { Timing, concatResults } from "../../util/common";
 import { IAppMixin } from "../../interface/Mixin";
 
 export class List {
   private app: IAppMixin;
-  private lists: IList[];
+  private list: IList;
+  private test: TestCase;
   private emitter: EventsBus;
-  private failedTests: number;
-  private isFailedGroup: boolean;
-  private startTime: Date;
-  private endTime: Date;
-  private elapsedTime: number;
+  private selections: Selection;
+  private timing: Timing;
 
-  constructor(lists: IList[], app: IAppMixin) {
-    this.lists = lists;
+  constructor(test: TestCase, app: IAppMixin) {
+    this.test = test;
+    this.list = test.details as IList;
     this.app = app;
     this.emitter = new EventsBus();
-    this.failedTests = 0;
-    this.isFailedGroup = false;
+    this.selections = Selection.getInstance();
+    this.timing = new Timing();
   }
 
-  async run(): Promise<IGroupResult> {
-    this.startTime = new Date();
+  async run(): Promise<TestEvaluationResult> {
+    this.timing.start();
 
-    const listResults: ITestMetaResult[] = await Promise.all(
-      this.lists.map((s) => {
-        return this.app
-          .mCreateSessionListbox(s.name, {
-            destroyOnComplete: true,
-            getAllData: true,
-          })
-          .then((res) =>
-            res.flattenData().map((f) => ({
-              qText: f.qText,
-              qState: f.qState,
-            }))
-          )
-          .then((values) => {
-            const temp_values = values.map((v) => v.qText);
-            // TODO: filter for values in specific qState. Default state to filter?
-            const notFound = s.values.filter((x) => !temp_values.includes(x));
+    // apply the required selections
+    const currentSelections = await this.applySelections();
 
-            const listResultStatus = notFound.length > 0 ? false : true;
-
-            if (!listResultStatus) {
-              this.failedTests++;
-              this.isFailedGroup = true;
-              this.emitter.emit("testError", {
-                group: "List",
-                name: s.name,
-                reason: `Values not found: ${concatResults(notFound)}`,
-              });
-
-              return {
-                name: s.name,
-                status: listResultStatus,
-                message: `Values not found: ${concatResults(notFound)}`,
-              };
-            }
-
-            return {
-              name: s.name,
-              status: listResultStatus,
-              message:
-                "Passed: Field exists and all expected values are present",
-            };
-          });
+    const listValues = await this.app
+      .mCreateSessionListbox(this.list.name, {
+        destroyOnComplete: true,
+        getAllData: true,
       })
-    );
+      .then((res) =>
+        res.flattenData().map((f) => ({
+          qText: f.qText,
+          qState: f.qState,
+        }))
+      );
 
-    this.endTime = new Date();
-    this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
+    const rawValues = listValues.map((v) => v.qText);
+
+    let testStatus = true;
+    let testStatusMessage = "";
+
+    if (this.list.operation == "present") {
+      const notFound = this.list.values.filter((x) => !rawValues.includes(x));
+      if (notFound.length > 0) {
+        testStatus = false;
+        testStatusMessage = `Failed: Values not found - ${concatResults(
+          notFound
+        )}`;
+      } else {
+        testStatusMessage =
+          "Passed: All specified values exists in the field/list";
+      }
+    }
+
+    if (this.list.operation == "missing") {
+      const found = this.list.values.filter((x) => rawValues.includes(x));
+
+      if (found.length > 0) {
+        testStatus = false;
+        testStatusMessage = `Failed: Values found - ${concatResults(found)}`;
+      } else {
+        testStatusMessage =
+          "Passed: All specified values do not exists in the field/list";
+      }
+    }
+
+    this.timing.stop();
 
     return {
-      status: !this.isFailedGroup,
-      group: "List",
-      totalTests: this.lists.length,
-      failedTests: this.failedTests,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      elapsedTime: this.elapsedTime,
-      testResults: listResults,
+      status: testStatus,
+      name: this.test.name,
+      type: "scalar",
+      timings: {
+        start: this.timing.startTime,
+        end: this.timing.endTime,
+        elapsed: this.timing.elapsedTime,
+      },
+      message: testStatusMessage,
+      currentSelections: currentSelections,
+    };
+  }
+
+  private async applySelections() {
+    if (this.test.selections)
+      return await this.selections.makeSelections(this.test.selections);
+
+    const currentSelections = await this.selections.getCurrentSelections();
+
+    return {
+      selections: currentSelections,
+      timings: {
+        start: "n/a",
+        end: "n/a",
+        elapsed: 0,
+        message:
+          "No timings to be captured. No selections to be made. Returning the currently active selections",
+      },
     };
   }
 }

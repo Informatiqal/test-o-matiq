@@ -229,19 +229,19 @@ export class TestOMatiq {
 
         // TODO: to validate the possible calculated dimensions
         // validate tables measures expressions
-        if (test.type == "table") {
-          return Promise.all(
-            (test.details as ITableTestCase).measures.map((m) => {
-              return _this.engine
-                .checkExpression(m)
-                .then((v) => null)
-                .catch(
-                  (e) =>
-                    `Test "${test.name}" measure validation failed -> ${e.message}`
-                );
-            })
-          ).then((validations) => validations.flat().filter((v) => v != null));
-        }
+        // if (test.type == "table") {
+        //   return Promise.all(
+        //     (test.details as ITableTestCase).measures.map((m) => {
+        //       return _this.engine
+        //         .checkExpression(m)
+        //         .then((v) => null)
+        //         .catch(
+        //           (e) =>
+        //             `Test "${test.name}" measure validation failed -> ${e.message}`
+        //         );
+        //     })
+        //   ).then((validations) => validations.flat().filter((v) => v != null));
+        // }
       })
     )
       .then((validations) => validations.flat().filter((v) => v != null))
