@@ -1,6 +1,5 @@
 import { TestCase, TestEvaluationResult } from "../../interface/Specs";
 import { Selection } from "../Selections";
-import { IAppMixin } from "../../interface/Mixin";
 
 export abstract class DataTestsBase {
   abstract test: TestCase;

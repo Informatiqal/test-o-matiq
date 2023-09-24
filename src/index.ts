@@ -3,7 +3,6 @@ import {
   IPropsSelectionArray,
   IScalar,
   ISelection,
-  ITableTestCase,
   Runbook,
   TestSuiteResult,
 } from "./interface/Specs";
@@ -25,11 +24,12 @@ export class TestOMatiq {
   qlikApp: IAppMixin;
   engine: Engine;
 
-  constructor(specs: Runbook, qlikApp: IAppMixin) {
+  constructor(specs: Runbook, qlikApp: IAppMixin, validateSchema?: boolean) {
     this.specs = specs;
     this.qlikApp = qlikApp;
     this.emitter = new EventsBus();
     this.testResults = {};
+    validateSchema = validateSchema == undefined ? true : validateSchema;
 
     const selectionsProps = this.specs.props?.selections
       ? this.propSelectionsToArray()
@@ -45,20 +45,23 @@ export class TestOMatiq {
     //   value[0].toString()
     // );
 
-    const ajv = new Ajv({
-      strict: true,
-      allowUnionTypes: true,
-      allErrors: true,
-    });
-    ajv.addMetaSchema(draft);
+    // validate the schema by default but have the option to suppress it as well
+    if (validateSchema) {
+      const ajv = new Ajv({
+        strict: true,
+        allowUnionTypes: true,
+        allErrors: true,
+      });
+      ajv.addMetaSchema(draft);
 
-    const isValidSpec = ajv.validate(schema, specs);
+      const isValidSpec = ajv.validate(schema, specs);
 
-    // if (isValidSpec == false)
-    //   throw {
-    //     message: "Error(s) while validating the input",
-    //     errors: ajv.errors,
-    //   };
+      if (isValidSpec == false)
+        throw {
+          message: "Error(s) while validating the input",
+          errors: ajv.errors,
+        };
+    }
   }
 
   //TODO: filter testSuites based on the provided option (if any. if not - all testSuites are active)
@@ -70,6 +73,8 @@ export class TestOMatiq {
       this.specs.spec.data = Object.fromEntries(
         options.testSuites.map((k) => [k, this.specs.spec.data[k]])
       );
+
+    // if (!this.specs.spec.meta && !this.specs.spec.data) return {};
 
     await this.validateExpressions();
     if (this.specs.props?.selections) await this.validateSelections();
@@ -94,15 +99,7 @@ export class TestOMatiq {
     });
     const meta = new Meta(this.specs.spec.meta || undefined, this.qlikApp);
     const metaResult = await meta.run();
-    // this.emitter.emit("group", {
-    //   group: "Meta",
-    //   message: `Meta tests finished`,
-    //   isFinished: true,
-    //   status: metaResult.status,
-    //   elapsedTime: metaResult.elapsedTime,
-    //   totalTests: metaResult.totalTests,
-    //   failedTests: metaResult.failedTests,
-    // });
+
     this.emitter.emit("group:result", metaResult);
     this.testResults["Meta"] = metaResult;
   }
@@ -264,6 +261,9 @@ export class TestOMatiq {
     );
   }
 
+  /**
+   * Create the specified session variables (if any)
+   */
   private async createSessionVariables() {
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables

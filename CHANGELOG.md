@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2023-09-24
+
+- [#124](https://github.com/Informatiqal/test-o-matiq/issues/124) the json schema is updated to include the latest changes (mostly related to the selections section)
+
 ## [0.4.1] - 2023-09-23
 
 - internal change - base abstract class for the data tests (list and scalar)

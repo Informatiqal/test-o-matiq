@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$ref": "#/definitions/Root",
+  "$ref": "#/definitions/Runbook",
   "definitions": {
-    "Root": {
+    "Runbook": {
       "type": "object",
       "properties": {
         "author": {
@@ -13,10 +13,6 @@
           "type": "string",
           "description": "Short description"
         },
-        "skip": {
-          "type": "boolean",
-          "description": "Skip the current tests"
-        },
         "spec": {
           "$ref": "#/definitions/Spec",
           "description": "The test specification"
@@ -26,51 +22,11 @@
           "description": "version number of the document (e.g. 1, 1.1, 0.1.0, 1.2.1 etc.)"
         },
         "props": {
-          "type": "object",
-          "properties": {
-            "selections": {
-              "type": "array",
-              "description": "Defined selections that can be used in the actual tests. Selections are made from top to bottom in sequence",
-              "items": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "select"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Unique identification of the selection"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "Describe what the selection is about"
-                  },
-                  "select": {
-                    "type": "array",
-                    "anyOf": [
-                      {
-                        "items": {
-                          "$ref": "#/definitions/ISelection"
-                        }
-                      },
-                      {
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "byName": {
-                              "type": "string",
-                              "description": "Name of a previously defined selection"
-                            }
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
+          "$ref": "#/definitions/IProps"
+        },
+        "debug": {
+          "type": "boolean",
+          "description": "Emit debug messages"
         }
       },
       "required": [
@@ -81,26 +37,19 @@
     "Spec": {
       "type": "object",
       "properties": {
-        "Meta": {
+        "meta": {
           "$ref": "#/definitions/IMeta"
         },
-        "Data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/IData"
-          }
+        "data": {
+          "$ref": "#/definitions/IData"
         }
       },
-      "required": [
-        "Data"
-      ],
       "additionalProperties": false
     },
     "IMeta": {
       "type": "object",
       "properties": {
         "DataModel": {
-          "description": "Data model specific test cases - fields, table, variable existence, always one selected is present for fields, synthetic key existence etc.",
           "$ref": "#/definitions/IDataModel"
         },
         "Field": {
@@ -124,6 +73,13 @@
             "type": "string"
           },
           "description": "List of object id that should exists in the app"
+        },
+        "DataConnections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of data connections that should exists"
         }
       },
       "additionalProperties": false
@@ -171,7 +127,7 @@
           "description": "Count of cardinal/distinct values to compare with"
         },
         "operator": {
-          "$ref": "#/definitions/IOperator",
+          "$ref": "#/definitions/IScalarOperator",
           "description": "Comparison operator",
           "default": "=="
         }
@@ -182,7 +138,7 @@
       ],
       "additionalProperties": false
     },
-    "IOperator": {
+    "IScalarOperator": {
       "type": "string",
       "enum": [
         "<",
@@ -190,7 +146,9 @@
         ">=",
         "<=",
         "==",
-        "!="
+        "!=",
+        "=",
+        "<>"
       ]
     },
     "ITable": {
@@ -205,7 +163,7 @@
           "description": "Count of rows count to compare with"
         },
         "operator": {
-          "$ref": "#/definitions/IOperator",
+          "$ref": "#/definitions/IScalarOperator",
           "description": "Comparison operator",
           "default": "=="
         }
@@ -236,68 +194,47 @@
     },
     "IData": {
       "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/TestSuiteDefinition"
+      }
+    },
+    "TestSuiteDefinition": {
+      "type": "object",
       "properties": {
-        "Name": {
-          "type": "string",
-          "description": "Unique name of the tests suite"
-        },
-        "Description": {
+        "description": {
           "type": "string",
           "description": "Descriptions of the tests"
         },
-        "Selections": {
+        "selections": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "select": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/ISelection"
-                }
-              }
-            },
-            "required": [
-              "name",
-              "select"
-            ]
+            "$ref": "#/definitions/ISelection"
           },
-          "description": "What selections to be applied BEFORE running the test\n\nSelections are applied one after another in order of appearance - first defined, fist selected"
+          "description": "What selections to be applied BEFORE running EACH test case in the group\n\nSelections are applied one after another in order of appearance - first defined, fist selected"
         },
-        "Tests": {
+        "properties": {
           "type": "object",
           "properties": {
-            "Scalar": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IScalar"
-              },
-              "description": "Single expression ``` sum(Sales) > 100; sum(Sales) != 100; ```"
+            "clearAllBeforeEach": {
+              "type": "boolean"
             },
-            "List": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IList"
-              },
-              "description": "Check for specific values presence in fields (and their state)"
-            },
-            "Table": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ITable2"
-              },
-              "description": "TBA"
+            "skip": {
+              "type": "boolean"
             }
           },
           "additionalProperties": false,
-          "description": "List of data tests"
+          "description": "Test group specific properties These properties are applied to ALL test cases inside the group"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TestCase"
+          },
+          "description": "List of test cases"
         }
       },
       "required": [
-        "Name"
+        "tests"
       ],
       "additionalProperties": false
     },
@@ -309,6 +246,18 @@
             "clearAll": {
               "type": "boolean",
               "description": "Clear all selections (perform `clearAll()`)"
+            },
+            "field": {
+              "not": {}
+            },
+            "values": {
+              "not": {}
+            },
+            "bookmark": {
+              "not": {}
+            },
+            "byName": {
+              "not": {}
             }
           },
           "required": [
@@ -326,9 +275,21 @@
             "values": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": [
+                  "string",
+                  "number"
+                ]
               },
               "description": "List of values to select.\n\nProvide all values as string (even if the actual values are in number format)!\n\nIf the selection should be applied via expression then start the value with \"=\". e.g. ``` { values: [\"=Only('Test')\"] } ```"
+            },
+            "clearAll": {
+              "not": {}
+            },
+            "bookmark": {
+              "not": {}
+            },
+            "byName": {
+              "not": {}
             }
           },
           "required": [
@@ -343,6 +304,18 @@
             "bookmark": {
               "type": "string",
               "description": "NAME of the bookmark to be applied"
+            },
+            "clearAll": {
+              "not": {}
+            },
+            "field": {
+              "not": {}
+            },
+            "values": {
+              "not": {}
+            },
+            "byName": {
+              "not": {}
             }
           },
           "required": [
@@ -353,20 +326,117 @@
         {
           "type": "object",
           "properties": {
-            "clear": {
+            "byName": {
               "type": "array",
               "items": {
                 "type": "string"
               },
-              "description": "Clear all selected values from provided fields list"
+              "description": "NAME of the bookmark to be applied"
+            },
+            "bookmark": {
+              "not": {}
+            },
+            "clearAll": {
+              "not": {}
+            },
+            "field": {
+              "not": {}
+            },
+            "values": {
+              "not": {}
             }
           },
           "required": [
-            "clear"
+            "byName"
           ],
           "additionalProperties": false
         }
       ]
+    },
+    "TestCase": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the test case"
+        },
+        "description": {
+          "type": "string",
+          "description": "Longer text that describe the purpose of the test case"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "scalar",
+            "list"
+          ],
+          "description": "What is the type of the test  case"
+        },
+        "selections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ISelection"
+          },
+          "description": "What selections to be applied before running the test\n\nWARNING: these selections will be applied AFTER the test group selections are applied (if any)"
+        },
+        "skip": {
+          "type": "boolean",
+          "description": "If true the test will not be performed"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IScalar"
+            },
+            {
+              "$ref": "#/definitions/IList"
+            },
+            {
+              "$ref": "#/definitions/ITableTestCase"
+            }
+          ]
+        },
+        "options": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "tolerance": {
+                  "type": "string",
+                  "description": "What is the allowed tolerance/deviation between the expression and the result.\n\nEven when \"operator\" property is \"=\" the tolerance will be respected.\n\nFor example: +- 100, +- 5%, 20%, -3%"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "In which state the expression to be made. The default option is $"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "blah": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "In which state the expression to be made. The default option is $"
+                }
+              },
+              "required": [
+                "blah"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "details"
+      ],
+      "additionalProperties": false
     },
     "IScalar": {
       "type": "object",
@@ -391,30 +461,14 @@
           "description": "Value to compare\n\nAccept string, number or expression\n\nTo be evaluated as expressions the values should start with =\n\n``` result: 100 result: \"abcd\" result: \"=sum(100)\" ```"
         },
         "operator": {
-          "$ref": "#/definitions/IOperator",
+          "$ref": "#/definitions/IScalarOperator",
           "description": "TBA"
-        },
-        "details": {
-          "$ref": "#/definitions/Details"
         }
       },
       "required": [
         "name",
         "expression",
-        "result",
         "operator"
-      ],
-      "additionalProperties": false
-    },
-    "Details": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "state"
       ],
       "additionalProperties": false
     },
@@ -432,23 +486,28 @@
           "items": {
             "type": "string"
           }
+        },
+        "operation": {
+          "$ref": "#/definitions/IListOperator"
         }
       },
       "required": [
         "name",
-        "values"
+        "values",
+        "operation"
       ],
       "additionalProperties": false
     },
-    "ITable2": {
+    "IListOperator": {
+      "type": "string",
+      "enum": [
+        "present",
+        "missing"
+      ]
+    },
+    "ITableTestCase": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
         "dimensions": {
           "type": "array",
           "items": {
@@ -461,34 +520,7 @@
             "type": "string"
           }
         },
-        "sort": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "result": {
-          "$ref": "#/definitions/Result"
-        }
-      },
-      "required": [
-        "name",
-        "dimensions",
-        "measures",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    "Result": {
-      "type": "object",
-      "properties": {
-        "Columns": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "Rows": {
           "type": "array",
           "items": {
             "type": "array",
@@ -497,10 +529,105 @@
         }
       },
       "required": [
-        "Columns",
-        "Rows"
+        "dimensions",
+        "measures",
+        "result"
       ],
       "additionalProperties": false
+    },
+    "IProps": {
+      "type": "object",
+      "properties": {
+        "selections": {
+          "$ref": "#/definitions/IPropsSelections",
+          "description": "Pre-define selections.\n\nThese selections can be referenced in the tests."
+        },
+        "variables": {
+          "$ref": "#/definitions/IPropsVariables",
+          "description": "Define SESSION variables that can be used during the test suite execution.\n\nMake sure that the name of the session variables is not overlapping with an existing document variable"
+        }
+      },
+      "additionalProperties": false
+    },
+    "IPropsSelections": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/IPropsSelection"
+        }
+      }
+    },
+    "IPropsSelection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "byName": {
+              "not": {}
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/definitions/Selection"
+        },
+        {
+          "$ref": "#/definitions/SelectionByName"
+        }
+      ]
+    },
+    "Selection": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "byName": {
+          "not": {}
+        }
+      },
+      "required": [
+        "field",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "SelectionByName": {
+      "type": "object",
+      "properties": {
+        "byName": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "field": {
+          "not": {}
+        },
+        "values": {
+          "not": {}
+        }
+      },
+      "required": [
+        "byName"
+      ],
+      "additionalProperties": false
+    },
+    "IPropsVariables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
     }
   }
 }

@@ -245,7 +245,7 @@ export interface TestCase {
    *
    * WARNING: these selections will be applied AFTER the test group selections are applied (if any)
    */
-  selections: ISelection[];
+  selections?: ISelection[];
   /**
    * If true the test will not be performed
    */
@@ -290,7 +290,7 @@ export interface IData {
 
 export interface Spec {
   meta?: IMeta;
-  data: IData;
+  data?: IData;
 }
 
 // export enum IQState {
