@@ -1,11 +1,12 @@
-import { Field, ITestMetaResult, ITestResult } from "../../interface/Specs";
+import { Field, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
-import { operations } from "../../util/common";
+import { Timing, operations } from "../../util/common";
 
 export class FieldCounts {
   private app: EngineAPI.IApp;
   private fields: Field[];
   private emitter: EventsBus;
+  private timing: Timing;
 
   constructor(fields: Field[], app: EngineAPI.IApp) {
     this.fields = fields;
@@ -13,8 +14,10 @@ export class FieldCounts {
     this.emitter = new EventsBus();
   }
 
-  async process(): Promise<ITestResult[]> {
+  async process(): Promise<ITestMetaResult[]> {
     let overallStatus = true;
+
+    this.timing.start();
 
     return await Promise.all(
       this.fields.map(async (f) => {
@@ -28,7 +31,7 @@ export class FieldCounts {
 
           if (!countStatus) overallStatus = countStatus;
 
-          const fieldResult: ITestResult = {
+          const fieldResult = {
             status: countStatus,
             name: "Field distinct counts",
             message: !countStatus
@@ -42,15 +45,27 @@ export class FieldCounts {
         }
       })
     ).then((testResults) => {
-      const fieldResult = {
+      this.timing.stop();
+
+      const result: ITestMetaResult = {
         name: "Meta -> Field",
         status: overallStatus,
         message: testResults.map((r) => r.message).join("\n"),
+        type: "meta",
+        timings: {
+          start: this.timing.startTime,
+          end: this.timing.endTime,
+          elapsed: this.timing.elapsedTime,
+        },
       };
 
-      this.emitter.emit("testResult", fieldResult);
+      this.emitter.emit("testResult", {
+        name: result.name,
+        status: result.status,
+        message: result.message,
+      });
 
-      return [fieldResult];
+      return [result];
     });
   }
 

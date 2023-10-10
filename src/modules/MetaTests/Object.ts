@@ -1,75 +1,55 @@
-import { IGroupResult, ITestMetaResult } from "../../interface/Specs";
+import { ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
-import { concatResults } from "../../util/common";
+import { Timing, concatResults } from "../../util/common";
 
 export class QObject {
   private app: EngineAPI.IApp;
   private qObjects: string[];
   private emitter: EventsBus;
-  private failedTests: number;
-  private isFailedGroup: boolean;
-  private startTime: Date;
-  private endTime: Date;
-  private elapsedTime: number;
+  private timing: Timing;
 
   constructor(qObjects: string[], app: EngineAPI.IApp) {
     this.qObjects = qObjects;
     this.app = app;
     this.emitter = new EventsBus();
-    this.failedTests = 0;
-    this.isFailedGroup = false;
   }
 
   /**
    * Check if the provided objects exists in the app
    */
   async run(): Promise<ITestMetaResult[]> {
-    this.startTime = new Date();
+    this.timing.start();
 
-    const objectsResult: ITestMetaResult = await this.app
+    const notFoundObjects: string[] = await this.app
       .getAllInfos()
       .then((allObjects) => {
+        this.timing.stop();
+
         const allObjectIds = allObjects.map((o) => o.qId);
-        const notFound = this.qObjects.filter((x) => !allObjectIds.includes(x));
-
-        if (notFound.length > 0) {
-          this.failedTests = notFound.length;
-          this.isFailedGroup = true;
-
-          // this.emitter.emit("testError", {
-          //   group: "Objects",
-          //   name: "Objects",
-          //   reason: `Object(s) not found: ${concatResults(notFound)}`,
-          // });
-
-          return {
-            name: "Meta -> VizObject",
-            status: false,
-            message: `Object(s) not found: ${concatResults(notFound)}`,
-          };
-        }
-
-        return {
-          name: "Meta -> VizObject",
-          status: true,
-          message: `Passed: All objects are present`,
-        };
+        return this.qObjects.filter((x) => !allObjectIds.includes(x));
       });
 
-    return [objectsResult];
+    const result: ITestMetaResult = {
+      name: "Meta -> Field",
+      status: notFoundObjects.length > 0 ? false : true,
+      message:
+        notFoundObjects.length > 0
+          ? `Object(s) not found: ${concatResults(notFoundObjects)}`
+          : `Passed: All objects are present`,
+      type: "meta",
+      timings: {
+        start: this.timing.startTime,
+        end: this.timing.endTime,
+        elapsed: this.timing.elapsedTime,
+      },
+    };
 
-    // this.endTime = new Date();
-    // this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
+    this.emitter.emit("testResult", {
+      name: result.name,
+      status: result.status,
+      message: result.message,
+    });
 
-    // return {
-    //   status: !this.isFailedGroup,
-    //   group: "Object",
-    //   totalTests: this.qObjects.length,
-    //   failedTests: this.failedTests,
-    //   startTime: this.startTime,
-    //   endTime: this.endTime,
-    //   elapsedTime: this.elapsedTime,
-    //   testResults: [objectsResult],
-    // };
+    return [result];
   }
 }

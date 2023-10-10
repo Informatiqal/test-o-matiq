@@ -24,14 +24,14 @@ export class List extends DataTestsBase {
     this.timing = new Timing();
   }
 
-  async run(): Promise<TestEvaluationResult> {
+  async process(): Promise<TestEvaluationResult> {
     this.timing.start();
 
     // apply the required selections
     const currentSelections = await this.applySelections();
 
     const listValues = await this.app
-      .mCreateSessionListbox(this.testDetails.name, {
+      .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
       })

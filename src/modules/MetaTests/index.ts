@@ -3,7 +3,6 @@ import {
   IGroupResult,
   IMeta,
   ITestMetaResult,
-  ITestResult,
   TestSuiteResult,
 } from "../../interface/Specs";
 import { DataModel } from "./DataModel/index";
@@ -37,7 +36,7 @@ export class Meta {
     this.startTime = new Date();
 
     // let promises: ITestResponse[] = [];
-    let promises = [] as Promise<ITestResult[]>[];
+    let promises = [] as Promise<ITestMetaResult[]>[];
 
     if (this.meta.DataModel) {
       const dm = new DataModel(this.meta.DataModel, this.app);
@@ -77,7 +76,7 @@ export class Meta {
         this.app
       );
       this.totalTests += this.meta.DataConnections.length;
-      promises.push(dataConnections.run());
+      promises.push(dataConnections.process());
     }
 
     const results = await (await Promise.all(promises)).flat();

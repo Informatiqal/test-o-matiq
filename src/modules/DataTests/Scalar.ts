@@ -26,7 +26,7 @@ export class Scalar extends DataTestsBase {
     this.timing = new Timing();
   }
 
-  async run(): Promise<TestEvaluationResult> {
+  async process(): Promise<TestEvaluationResult> {
     this.timing.start();
 
     // apply the required selections

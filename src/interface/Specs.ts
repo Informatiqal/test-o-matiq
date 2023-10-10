@@ -144,6 +144,7 @@ export interface IScalar {
 
 export interface IList {
   // name?: string;
+  fieldName: string;
   description?: string;
   values: string[];
   operation: IListOperator;
@@ -343,10 +344,13 @@ export interface Timings {
   message?: string;
 }
 
-export interface ITestMetaResult {
+export interface ITestDataEmit {
   status: boolean;
   name: string;
   message: string;
+}
+
+export interface ITestMetaResult extends ITestDataEmit {
   timings: Timings;
   type: "scalar" | "list" | "table" | "meta";
 }
