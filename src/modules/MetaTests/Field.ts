@@ -1,4 +1,4 @@
-import { Field, ITestMetaResult } from "../../interface/Specs";
+import { Field, ITestMetaResult, ITestResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 import { operations } from "../../util/common";
 
@@ -13,7 +13,9 @@ export class FieldCounts {
     this.emitter = new EventsBus();
   }
 
-  async process(): Promise<ITestMetaResult[]> {
+  async process(): Promise<ITestResult[]> {
+    let overallStatus = true;
+
     return await Promise.all(
       this.fields.map(async (f) => {
         try {
@@ -24,31 +26,32 @@ export class FieldCounts {
             f.count
           );
 
-          if (!countStatus) {
-            this.emitter.emit("testError", {
-              group: "Meta",
-              subGroup: "Field counts",
-              name: f.name,
-              reason: `Result value and expected do not match. Expected ${f.count}. Received ${cardinal} `,
-            });
-          }
+          if (!countStatus) overallStatus = countStatus;
 
-          return {
+          const fieldResult: ITestResult = {
             status: countStatus,
             name: "Field distinct counts",
             message: !countStatus
               ? `Field "${f.name}" have ${cardinal} values. Expected ${f.count}`
               : `Passed: Field "${f.name}" have ${cardinal} values`,
           };
+
+          return fieldResult;
         } catch (e) {
-          return {
-            status: false,
-            name: f.name,
-            message: e.message,
-          };
+          return { name: "Meta -> Field", status: false, message: e.message };
         }
       })
-    );
+    ).then((testResults) => {
+      const fieldResult = {
+        name: "Meta -> Field",
+        status: overallStatus,
+        message: testResults.map((r) => r.message).join("\n"),
+      };
+
+      this.emitter.emit("testResult", fieldResult);
+
+      return [fieldResult];
+    });
   }
 
   /**

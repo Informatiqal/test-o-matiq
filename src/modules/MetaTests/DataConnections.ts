@@ -1,11 +1,12 @@
 import { IGroupResult, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
-import { concatResults } from "../../util/common";
+import { Timing, concatResults } from "../../util/common";
 
 export class DataConnections {
   private app: EngineAPI.IApp;
   private qDataConnections: string[];
   private emitter: EventsBus;
+  private timing: Timing;
   private failedTests: number;
   private isFailedGroup: boolean;
   private startTime: Date;
@@ -18,48 +19,77 @@ export class DataConnections {
     this.emitter = new EventsBus();
     this.failedTests = 0;
     this.isFailedGroup = false;
+    this.timing = new Timing();
   }
 
   /**
    * Check if the provided data connections exists from the app
    */
   async run(): Promise<ITestMetaResult[]> {
-    this.startTime = new Date();
+    this.timing.start();
 
-    const dataConnectionsResult: ITestMetaResult = await this.app
+    const notFoundDataConnections: string[] = await this.app
       .getConnections()
       .then((allDataConnections) => {
+        this.timing.stop();
+
         const allDataConnectionNames = allDataConnections.map((o) => o.qName);
-        const notFound = this.qDataConnections.filter(
+        return this.qDataConnections.filter(
           (x) => !allDataConnectionNames.includes(x)
         );
 
-        if (notFound.length > 0) {
-          this.failedTests = notFound.length;
-          this.isFailedGroup = true;
+        // return notFound;
+        // if (notFound.length > 0) {
+        //   overallStatus = false;
+        //   this.failedTests = notFound.length;
+        //   this.isFailedGroup = true;
 
-          // this.emitter.emit("testError", {
-          //   group: "Objects",
-          //   name: "Objects",
-          //   reason: `Object(s) not found: ${concatResults(notFound)}`,
-          // });
+        //   return {
+        //     name: "Meta -> DataConnections",
+        //     status: false,
+        //     message: `Data connection(s) not found: ${concatResults(notFound)}`,
+        //     type: "meta",
+        //     timings: {
+        //       start: this.timing.startTime,
+        //       end: this.timing.endTime,
+        //       elapsed: this.timing.elapsedTime,
+        //     },
+        //   };
+        // }
 
-          return {
-            status: false,
-            // type: "meta",
-            name: "DataConnections",
-            message: `Data connection(s) not found: ${concatResults(notFound)}`,
-          };
-        }
-
-        return {
-          status: true,
-          name: "DataConnections",
-          message: `Passed: All data connections are present`,
-        };
+        // return {
+        //   name: "Meta -> DataConnections",
+        //   status: overallStatus,
+        //   message: `Passed: All data connections are present`,
+        //   type: "meta",
+        //   timings: {
+        //     start: this.timing.startTime,
+        //     end: this.timing.endTime,
+        //     elapsed: this.timing.elapsedTime,
+        //   },
+        // };
       });
 
-    return [dataConnectionsResult];
+    const result: ITestMetaResult = {
+      name: "Meta -> DataConnections",
+      status: notFoundDataConnections.length > 0 ? false : true,
+      message:
+        notFoundDataConnections.length > 0
+          ? `Data connection(s) not found: ${concatResults(
+              notFoundDataConnections
+            )}`
+          : `Passed: All data connections are present`,
+      type: "meta",
+      timings: {
+        start: this.timing.startTime,
+        end: this.timing.endTime,
+        elapsed: this.timing.elapsedTime,
+      },
+    };
+
+    this.emitter.emit("testResult", result);
+
+    return [result];
 
     // this.endTime = new Date();
     // this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();

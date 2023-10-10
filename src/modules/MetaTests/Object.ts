@@ -36,22 +36,22 @@ export class QObject {
           this.failedTests = notFound.length;
           this.isFailedGroup = true;
 
-          this.emitter.emit("testError", {
-            group: "Objects",
-            name: "Objects",
-            reason: `Object(s) not found: ${concatResults(notFound)}`,
-          });
+          // this.emitter.emit("testError", {
+          //   group: "Objects",
+          //   name: "Objects",
+          //   reason: `Object(s) not found: ${concatResults(notFound)}`,
+          // });
 
           return {
+            name: "Meta -> VizObject",
             status: false,
-            name: "Objects",
             message: `Object(s) not found: ${concatResults(notFound)}`,
           };
         }
 
         return {
+          name: "Meta -> VizObject",
           status: true,
-          name: "Objects",
           message: `Passed: All objects are present`,
         };
       });

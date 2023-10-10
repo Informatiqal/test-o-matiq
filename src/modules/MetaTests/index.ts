@@ -3,6 +3,7 @@ import {
   IGroupResult,
   IMeta,
   ITestMetaResult,
+  ITestResult,
   TestSuiteResult,
 } from "../../interface/Specs";
 import { DataModel } from "./DataModel/index";
@@ -36,7 +37,7 @@ export class Meta {
     this.startTime = new Date();
 
     // let promises: ITestResponse[] = [];
-    let promises = [] as Promise<ITestMetaResult[]>[];
+    let promises = [] as Promise<ITestResult[]>[];
 
     if (this.meta.DataModel) {
       const dm = new DataModel(this.meta.DataModel, this.app);
@@ -64,9 +65,9 @@ export class Meta {
       promises.push(ve.process());
     }
 
-    if (this.meta.Object) {
-      const qObject = new QObject(this.meta.Object, this.app);
-      this.totalTests += this.meta.Object.length;
+    if (this.meta.VizObject) {
+      const qObject = new QObject(this.meta.VizObject, this.app);
+      this.totalTests += this.meta.VizObject.length;
       promises.push(qObject.run());
     }
 

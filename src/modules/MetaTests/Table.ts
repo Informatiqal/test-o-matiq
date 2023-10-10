@@ -26,20 +26,22 @@ export class TableCounts {
       false
     );
 
+    let overallStatus = true;
+
     return this.tables.map((t) => {
       const tableDetails = qtr.filter((t1) => t1.qName == t.name)[0];
 
       if (!tableDetails) {
-        this.emitter.emit("testError", {
-          group: "Meta",
-          subGroup: "Table row counts",
-          name: t.name,
-          reason: `Table "${t.name}" do not exists`,
-        });
+        // this.emitter.emit("testError", {
+        //   group: "Meta",
+        //   subGroup: "Table row counts",
+        //   name: t.name,
+        //   reason: `Table "${t.name}" do not exists`,
+        // });
 
         return {
+          name: "Meta -> Table",
           status: false,
-          name: "Table row counts",
           message: `Table "${t.name}" do not exists`,
         };
       }
@@ -49,18 +51,18 @@ export class TableCounts {
         t.count
       );
 
-      if (!tableDetailsStatus) {
-        this.emitter.emit("testError", {
-          group: "Meta",
-          subGroup: "Table row counts",
-          name: t.name,
-          reason: `Result value and expected do not match. Expected "${t.count}, received "${tableDetails.qNoOfRows}"`,
-        });
-      }
+      // if (!tableDetailsStatus) {
+      //   this.emitter.emit("testError", {
+      //     group: "Meta",
+      //     subGroup: "Table row counts",
+      //     name: t.name,
+      //     reason: `Result value and expected do not match. Expected "${t.count}, received "${tableDetails.qNoOfRows}"`,
+      //   });
+      // }
 
       return {
+        name: "Meta -> Table",
         status: tableDetailsStatus,
-        name: "Table row counts",
         message: !tableDetailsStatus
           ? `table "${t.name}" have ${tableDetails.qNoOfRows} rows. Expected ${t.count}`
           : `Passed: ${t.name} have ${t.count} rows`,

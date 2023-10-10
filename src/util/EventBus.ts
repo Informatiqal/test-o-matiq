@@ -3,12 +3,14 @@ import {
   IEventError,
   IEventGroupStartEnd,
   IGroupResult,
+  ITestResult,
 } from "../interface/Specs";
 
 import { EventEmitter } from "events";
 
 export declare interface EventsBus {
   on(event: "testError", listener: (name: IEventError) => void): this;
+  on(event: "testResult", listener: (name: ITestResult) => void): this;
   on(event: "all", listener: (name: string) => void): this;
   on(event: "group", listener: (body: IEventGroupStartEnd) => void): this;
   on(event: "group:result", listener: (body: IGroupResult) => void): this;
