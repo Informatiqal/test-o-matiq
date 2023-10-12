@@ -12,6 +12,7 @@ export class QObject {
     this.qObjects = qObjects;
     this.app = app;
     this.emitter = new EventsBus();
+    this.timing = new Timing();
   }
 
   /**
@@ -35,7 +36,7 @@ export class QObject {
       message:
         notFoundObjects.length > 0
           ? `Object(s) not found: ${concatResults(notFoundObjects)}`
-          : `Passed: All objects are present`,
+          : `All objects are present`,
       type: "meta",
       timings: {
         start: this.timing.startTime,
@@ -44,11 +45,7 @@ export class QObject {
       },
     };
 
-    this.emitter.emit("testResult", {
-      name: result.name,
-      status: result.status,
-      message: result.message,
-    });
+    this.emitter.emit("testResult", result);
 
     return [result];
   }

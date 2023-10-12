@@ -1,6 +1,5 @@
 import { IAppMixin } from "../../interface/Mixin";
 import {
-  IGroupResult,
   IMeta,
   ITestMetaResult,
   TestSuiteResult,

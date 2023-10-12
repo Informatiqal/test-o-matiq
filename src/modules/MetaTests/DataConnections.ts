@@ -40,7 +40,7 @@ export class DataConnections {
           ? `Data connection(s) not found: ${concatResults(
               notFoundDataConnections
             )}`
-          : `Passed: All data connections are present`,
+          : `All data connections are present`,
       type: "meta",
       timings: {
         start: this.timing.startTime,
@@ -49,11 +49,7 @@ export class DataConnections {
       },
     };
 
-    this.emitter.emit("testResult", {
-      name: result.name,
-      status: result.status,
-      message: result.message,
-    });
+    this.emitter.emit("testResult", result);
 
     return [result];
   }

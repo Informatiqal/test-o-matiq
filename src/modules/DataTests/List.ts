@@ -1,6 +1,12 @@
 import { IAppMixin } from "../../interface/Mixin";
 import { EventsBus } from "../../util/EventBus";
-import { IList, TestCase, TestEvaluationResult } from "../../interface/Specs";
+import {
+  IList,
+  ITestDataResult,
+  ITestMetaResult,
+  TestCase,
+  TestEvaluationResult,
+} from "../../interface/Specs";
 import { Timing, concatResults } from "../../util/common";
 import { Selection } from "../../modules/Selections";
 import { DataTestsBase } from "./BaseClass";
@@ -24,7 +30,7 @@ export class List extends DataTestsBase {
     this.timing = new Timing();
   }
 
-  async process(): Promise<TestEvaluationResult> {
+  async process(): Promise<ITestDataResult> {
     this.timing.start();
 
     // apply the required selections
@@ -57,8 +63,7 @@ export class List extends DataTestsBase {
           notFound
         )}`;
       } else {
-        testStatusMessage =
-          "Passed: All specified values exists in the field/list";
+        testStatusMessage = "All specified values exists in the field/list";
       }
     }
 
@@ -72,13 +77,13 @@ export class List extends DataTestsBase {
         testStatusMessage = `Failed: Values found - ${concatResults(found)}`;
       } else {
         testStatusMessage =
-          "Passed: All specified values do not exists in the field/list";
+          "All specified values do not exists in the field/list";
       }
     }
 
     this.timing.stop();
 
-    return {
+    const result: ITestDataResult = {
       status: testStatus,
       name: this.test.name,
       type: "scalar",
@@ -90,5 +95,9 @@ export class List extends DataTestsBase {
       message: testStatusMessage,
       currentSelections: currentSelections,
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 }

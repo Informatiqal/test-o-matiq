@@ -12,6 +12,7 @@ export class TableCounts {
     this.tables = tables;
     this.app = app;
     this.emitter = new EventsBus();
+    this.timing = new Timing();
   }
 
   /**
@@ -75,7 +76,7 @@ export class TableCounts {
       message:
         notFoundTables.length > 0 || notMatchingRecords.length > 0
           ? message
-          : "Passed: All tables are present and rows counts are matching",
+          : "All tables are present and rows counts are matching",
       status:
         notFoundTables.length > 0 || notMatchingRecords.length > 0
           ? false
@@ -87,11 +88,7 @@ export class TableCounts {
       },
     };
 
-    this.emitter.emit("testResult", {
-      name: result.name,
-      status: result.status,
-      message: result.message,
-    });
+    this.emitter.emit("testResult", result);
 
     return [result];
   }

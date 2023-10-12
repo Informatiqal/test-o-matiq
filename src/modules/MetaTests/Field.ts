@@ -12,6 +12,7 @@ export class FieldCounts {
     this.fields = fields;
     this.app = app;
     this.emitter = new EventsBus();
+    this.timing = new Timing();
   }
 
   async process(): Promise<ITestMetaResult[]> {
@@ -36,7 +37,7 @@ export class FieldCounts {
             name: "Field distinct counts",
             message: !countStatus
               ? `Field "${f.name}" have ${cardinal} values. Expected ${f.count}`
-              : `Passed: Field "${f.name}" have ${cardinal} values`,
+              : `Field "${f.name}" have ${cardinal} values`,
           };
 
           return fieldResult;
@@ -59,11 +60,7 @@ export class FieldCounts {
         },
       };
 
-      this.emitter.emit("testResult", {
-        name: result.name,
-        status: result.status,
-        message: result.message,
-      });
+      this.emitter.emit("testResult", result);
 
       return [result];
     });

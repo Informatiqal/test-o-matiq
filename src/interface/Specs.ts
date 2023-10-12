@@ -155,11 +155,6 @@ export interface Measure {
   calculation: string;
 }
 
-export interface Result {
-  // columns: string[];
-  // rows: any[][];
-}
-
 export interface ITableTestCase {
   dimensions: string[];
   // measures: Measure[];
@@ -344,26 +339,21 @@ export interface Timings {
   message?: string;
 }
 
-export interface ITestDataEmit {
+export interface ITestMetaResult {
   status: boolean;
   name: string;
   message: string;
-}
-
-export interface ITestMetaResult extends ITestDataEmit {
   timings: Timings;
   type: "scalar" | "list" | "table" | "meta";
 }
 
-export interface IGroupResult {
-  status: boolean;
-  group: string;
-  totalTests: number;
-  failedTests: number;
-  startTime: Date;
-  endTime: Date;
-  elapsedTime: number;
-  testResults: ITestMetaResult[];
+export interface CurrentSelections {
+  selections: qSelections[];
+  timings: Timings;
+}
+
+export interface ITestDataResult extends ITestMetaResult {
+  currentSelections: CurrentSelections;
 }
 
 // export interface TestMetaResult {}
@@ -373,10 +363,7 @@ export interface TestEvaluationResult extends ITestMetaResult {
   // name: string;
   // message: string;
   // timings: Timings;
-  currentSelections: {
-    selections: qSelections[];
-    timings: Timings;
-  };
+  currentSelections: CurrentSelections;
 }
 
 export interface TestSuiteResult {
@@ -385,30 +372,6 @@ export interface TestSuiteResult {
   totalTests: number;
   failedTests: number;
   totalElapsedTime: number;
-}
-
-export interface IEventError {
-  group: string;
-  subGroup?: string;
-  name: string;
-  reason: string;
-}
-
-export interface IEventDebug {
-  // group: string;
-  // subGroup?: string;
-  name: string;
-  message: string;
-}
-
-export interface IEventGroupStartEnd {
-  group: string;
-  message: string;
-  isFinished: boolean;
-  status: boolean;
-  elapsedTime: number;
-  totalTests: number;
-  failedTests: number;
 }
 
 // props should have ONE OF byName or field <-> name
@@ -483,10 +446,6 @@ export type SelectionByNameArray = {
   values?: undefined;
   name: string;
 };
-
-export interface TestDetails {
-  //
-}
 
 export interface qSelections {
   qTotal: number;
