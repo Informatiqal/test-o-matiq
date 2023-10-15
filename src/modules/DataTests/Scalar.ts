@@ -55,19 +55,15 @@ export class Scalar extends DataTestsBase {
     this.timing.stop();
 
     const result: ITestDataResult = {
-      status: testStatus,
       name: this.test.name,
+      status: testStatus,
       type: "scalar",
       timings: {
         start: this.timing.startTime,
         end: this.timing.endTime,
         elapsed: this.timing.elapsedTime,
       },
-      message: !testStatus
-        ? `Failed: ${leftSide} ${
-            this.testDetails.operator || "=="
-          } ${rightSide}`
-        : `${leftSide} ${this.testDetails.operator || "=="} ${rightSide}`,
+      message: `${leftSide} ${this.testDetails.operator || "=="} ${rightSide}`,
       currentSelections: currentSelections,
     };
 

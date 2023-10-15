@@ -1,6 +1,7 @@
 import { IAppMixin } from "../../interface/Mixin";
 import {
   IMeta,
+  ITestDataResult,
   ITestMetaResult,
   TestSuiteResult,
 } from "../../interface/Specs";
@@ -14,24 +15,24 @@ import { DataConnections } from "./DataConnections";
 export class Meta {
   meta: IMeta;
   app: IAppMixin;
-  private failedTests: number;
-  private isFailedGroup: boolean;
+  // private failedTests: number;
+  // private isFailedGroup: boolean;
   private startTime: Date;
   private endTime: Date;
   private elapsedTime: number;
   private totalTests: number;
-  private testResults: ITestMetaResult[];
+  // private testResults: ITestMetaResult[];
   // private qObject: QObject;
 
   constructor(meta: IMeta, app: IAppMixin) {
     this.meta = meta;
     this.app = app;
-    this.failedTests = 0;
-    this.isFailedGroup = false;
+    // this.failedTests = 0;
+    // this.isFailedGroup = false;
     this.totalTests = 0;
   }
 
-  async run(): Promise<TestSuiteResult> {
+  async run(): Promise<ITestMetaResult[]> {
     this.startTime = new Date();
 
     // let promises: ITestResponse[] = [];
@@ -80,25 +81,16 @@ export class Meta {
 
     const results = await (await Promise.all(promises)).flat();
 
-    results.map((r) => {
-      if (r.status == false) {
-        this.isFailedGroup = true;
-        this.failedTests++;
-      }
-    });
+    // results.map((r) => {
+    //   if (r.status == false) {
+    //     this.isFailedGroup = true;
+    //     this.failedTests++;
+    //   }
+    // });
 
     this.endTime = new Date();
     this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
 
-    return {
-      status: !this.isFailedGroup,
-      // group: "Meta",
-      totalTests: this.totalTests,
-      failedTests: this.failedTests,
-      // startTime: this.startTime,
-      // endTime: this.endTime,
-      totalElapsedTime: Math.abs(this.elapsedTime / 1000),
-      tests: results,
-    };
+    return results;
   }
 }

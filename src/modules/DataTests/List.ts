@@ -59,7 +59,7 @@ export class List extends DataTestsBase {
       );
       if (notFound.length > 0) {
         testStatus = false;
-        testStatusMessage = `Failed: Values not found - ${concatResults(
+        testStatusMessage = `Values not found - ${concatResults(
           notFound
         )}`;
       } else {
@@ -74,7 +74,7 @@ export class List extends DataTestsBase {
 
       if (found.length > 0) {
         testStatus = false;
-        testStatusMessage = `Failed: Values found - ${concatResults(found)}`;
+        testStatusMessage = `Values found - ${concatResults(found)}`;
       } else {
         testStatusMessage =
           "All specified values do not exists in the field/list";
@@ -84,8 +84,8 @@ export class List extends DataTestsBase {
     this.timing.stop();
 
     const result: ITestDataResult = {
-      status: testStatus,
       name: this.test.name,
+      status: testStatus,
       type: "scalar",
       timings: {
         start: this.timing.startTime,

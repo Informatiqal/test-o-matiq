@@ -369,8 +369,8 @@ export interface TestEvaluationResult extends ITestMetaResult {
 export interface TestSuiteResult {
   status: boolean;
   tests: TestEvaluationResult[] | ITestMetaResult[];
-  totalTests: number;
-  failedTests: number;
+  // totalTests: number;
+  // failedTests: number;
   totalElapsedTime: number;
 }
 
