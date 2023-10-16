@@ -1,4 +1,9 @@
-import { IScalar, TestCase, TestEvaluationResult } from "../../interface/Specs";
+import {
+  IScalar,
+  ITestDataResult,
+  TestCase,
+  TestEvaluationResult,
+} from "../../interface/Specs";
 import { operations } from "../../util/common";
 import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
@@ -26,8 +31,9 @@ export class Scalar extends DataTestsBase {
     this.timing = new Timing();
   }
 
-  async run(): Promise<TestEvaluationResult> {
+  async process(): Promise<ITestDataResult> {
     this.timing.start();
+    this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
     const currentSelections = await this.applySelections();
@@ -49,39 +55,22 @@ export class Scalar extends DataTestsBase {
 
     this.timing.stop();
 
-    //TODO: emit the result here
-    // if there is no match emit error event
-    // if (!evaluateResultStatus) {
-    // this.failedTests++;
-    // this.isFailedGroup = true;
-    // this.emitter.emit("testError", {
-    //   group: "Scalar",
-    //   name: this.testDetails.name,
-    //   reason: `Failed: ${leftSide} ${this.testDetails.operator} ${rightSide}`,
-    // });
-    // }
-
-    // this.endTime = new Date();
-    // this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
-
-    return {
-      status: testStatus,
+    const result: ITestDataResult = {
       name: this.test.name,
+      status: testStatus,
       type: "scalar",
       timings: {
         start: this.timing.startTime,
         end: this.timing.endTime,
         elapsed: this.timing.elapsedTime,
       },
-      message: !testStatus
-        ? `Failed: ${leftSide} ${
-            this.testDetails.operator || "=="
-          } ${rightSide}`
-        : `Passed: ${leftSide} ${
-            this.testDetails.operator || "=="
-          } ${rightSide}`,
+      message: `${leftSide} ${this.testDetails.operator || "=="} ${rightSide}`,
       currentSelections: currentSelections,
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 
   private async evaluate(expression: string) {

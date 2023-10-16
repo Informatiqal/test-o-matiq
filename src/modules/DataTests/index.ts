@@ -74,12 +74,12 @@ export class TestSuite {
 
     if (test.type == "scalar") {
       const scalar = new Scalar(test, this.qlikApp);
-      return await scalar.run();
+      return await scalar.process();
     }
 
     if (test.type == "list") {
       const list = new List(test, this.qlikApp);
-      return await list.run();
+      return await list.process();
     }
 
     // Table will be disabled at the moment https://github.com/Informatiqal/test-o-matiq/issues/145

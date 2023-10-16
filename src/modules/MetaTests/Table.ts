@@ -1,16 +1,18 @@
 import { ITable, ITestMetaResult } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
-import { operations } from "../../util/common";
+import { Timing, concatResults, operations } from "../../util/common";
 
 export class TableCounts {
   private app: EngineAPI.IApp;
   private tables: ITable[];
   private emitter: EventsBus;
+  private timing: Timing;
 
   constructor(tables: ITable[], app: EngineAPI.IApp) {
     this.tables = tables;
     this.app = app;
     this.emitter = new EventsBus();
+    this.timing = new Timing();
   }
 
   /**
@@ -18,6 +20,9 @@ export class TableCounts {
    * with the expected row counts
    */
   async process(): Promise<ITestMetaResult[]> {
+    this.timing.start();
+    this.emitter.emit("testStart", "Meta -> Tables");
+
     const { qtr } = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,
       {} as EngineAPI.ISize,
@@ -26,45 +31,66 @@ export class TableCounts {
       false
     );
 
-    return this.tables.map((t) => {
-      const tableDetails = qtr.filter((t1) => t1.qName == t.name)[0];
+    // list of tables missing from the dataset
+    const notFoundTables: string[] = this.tables
+      .filter((t) => {
+        const tableDetails = qtr.filter((t1) => t1.qName == t.name)[0];
+        if (!tableDetails) return true;
 
-      if (!tableDetails) {
-        this.emitter.emit("testError", {
-          group: "Meta",
-          subGroup: "Table row counts",
-          name: t.name,
-          reason: `Table "${t.name}" do not exists`,
-        });
+        return false;
+      })
+      .map((t) => t.name);
+
+    const notMatchingRecords = this.tables
+      .filter((t) => {
+        return !notFoundTables.includes(t.name);
+      })
+      .map((t) => {
+        const tableDetails = qtr.filter((t1) => t1.qName == t.name)[0];
 
         return {
-          status: false,
-          name: "Table row counts",
-          message: `Table "${t.name}" do not exists`,
-        };
-      }
-
-      const tableDetailsStatus = operations[t.operator ? t.operator : "=="](
-        tableDetails.qNoOfRows,
-        t.count
-      );
-
-      if (!tableDetailsStatus) {
-        this.emitter.emit("testError", {
-          group: "Meta",
-          subGroup: "Table row counts",
+          status: operations[t.operator ? t.operator : "=="](
+            tableDetails.qNoOfRows,
+            t.count
+          ),
+          expectedCount: t.count,
+          actualCount: tableDetails.qNoOfRows,
           name: t.name,
-          reason: `Result value and expected do not match. Expected "${t.count}, received "${tableDetails.qNoOfRows}"`,
-        });
-      }
+        };
+      })
+      .filter((t) => t.status == false);
 
-      return {
-        status: tableDetailsStatus,
-        name: "Table row counts",
-        message: !tableDetailsStatus
-          ? `table "${t.name}" have ${tableDetails.qNoOfRows} rows. Expected ${t.count}`
-          : `Passed: ${t.name} have ${t.count} rows`,
-      };
-    });
+    this.timing.stop();
+
+    let message = "";
+    if (notFoundTables.length > 0)
+      message += `Table(s) not found: ${concatResults(notFoundTables)}`;
+
+    if (notMatchingRecords.length > 0)
+      message += `Table(s) rows count not matching: ${concatResults(
+        notMatchingRecords.map((t) => t.name)
+      )}`;
+
+    const result: ITestMetaResult = {
+      name: "Meta -> Tables",
+      type: "meta",
+      message:
+        notFoundTables.length > 0 || notMatchingRecords.length > 0
+          ? message
+          : "All tables are present and rows counts are matching",
+      status:
+        notFoundTables.length > 0 || notMatchingRecords.length > 0
+          ? false
+          : true,
+      timings: {
+        start: this.timing.startTime,
+        end: this.timing.endTime,
+        elapsed: this.timing.elapsedTime,
+      },
+    };
+
+    this.emitter.emit("testResult", result);
+
+    return [result];
   }
 }

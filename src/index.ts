@@ -3,6 +3,8 @@ import {
   IPropsSelectionArray,
   IScalar,
   ISelection,
+  ITestDataResult,
+  ITestMetaResult,
   Runbook,
   TestSuiteResult,
 } from "./interface/Specs";
@@ -20,7 +22,7 @@ import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json
 export class TestOMatiq {
   specs: Runbook;
   emitter: EventsBus;
-  testResults: { [k: string]: TestSuiteResult };
+  testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
   qlikApp: IAppMixin;
   engine: Engine;
 
@@ -65,13 +67,21 @@ export class TestOMatiq {
   }
 
   //TODO: filter testSuites based on the provided option (if any. if not - all testSuites are active)
-  async run(options?: {
-    testSuites?: string[];
-  }): Promise<{ [k: string]: TestSuiteResult }> {
+  async run(options?: { testSuites?: string[] }): Promise<{
+    tests: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
+    totalTime: number;
+    failedTests: number;
+    passedTests: number;
+  }> {
     // check if test suites have to be filtered first
-    if (options.testSuites.length > 0)
+    if (options?.testSuites?.length > 0)
       this.specs.spec.data = Object.fromEntries(
-        options.testSuites.map((k) => [k, this.specs.spec.data[k]])
+        options.testSuites
+          .map((k) => {
+            if (!this.specs.spec.data || !this.specs.spec.data[k]) return [];
+            return [k, this.specs.spec.data[k]];
+          })
+          .filter((k) => k.length > 0)
       );
 
     // if (!this.specs.spec.meta && !this.specs.spec.data) return {};
@@ -80,28 +90,47 @@ export class TestOMatiq {
     if (this.specs.props?.selections) await this.validateSelections();
     // this.validateTaskOperatorResult();
 
-    if (this.specs.props.variables) await this.createSessionVariables();
-    if (this.specs.spec.meta) await this.processMeta();
-    if (this.specs.spec.data) await this.runTestSuites();
+    if (this.specs.props?.variables) await this.createSessionVariables();
+    if (this.specs.spec?.meta) await this.runMetaTests();
+    if (this.specs.spec?.data) await this.runDataTests();
 
-    return this.testResults;
+    let failedTests = 0;
+    let passedTests = 0;
+    let totalTime = 0;
+
+    Object.entries(this.testResults).map(([testName, testsResults]) => {
+      testsResults.map((test: ITestDataResult) => {
+        test.status ? passedTests++ : failedTests++;
+        totalTime += test.timings.elapsed;
+      });
+    });
+
+    return {
+      tests: this.testResults,
+      totalTime: totalTime,
+      passedTests: passedTests,
+      failedTests: failedTests,
+    };
   }
 
-  private async processMeta() {
-    this.emitter.emit("group", {
-      group: "Meta",
-      message: `Starting Meta tests ...`,
-      isFinished: false,
-      status: true,
-      elapsedTime: -1,
-      totalTests: -1,
-      failedTests: -1,
-    });
+  private async runMetaTests() {
     const meta = new Meta(this.specs.spec.meta || undefined, this.qlikApp);
     const metaResult = await meta.run();
 
-    this.emitter.emit("group:result", metaResult);
-    this.testResults["Meta"] = metaResult;
+    // this.emitter.emit("group:result", metaResult);
+    this.testResults["meta"] = metaResult;
+  }
+
+  private async runDataTests() {
+    for (let [testSuiteName, testSuiteDefinition] of Object.entries(
+      this.specs.spec.data
+    )) {
+      const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
+
+      const testResults = await testSuite.performTests();
+
+      this.testResults[testSuiteName] = testResults;
+    }
   }
 
   /**
@@ -185,7 +214,7 @@ export class TestOMatiq {
     let failedValidations = [];
 
     // validate all session variables
-    if (this.specs.props.variables) {
+    if (this.specs.props?.variables) {
       await Promise.all(
         Object.entries(this.specs.props.variables).map(
           ([varName, varDefinition]) => {
@@ -276,44 +305,6 @@ export class TestOMatiq {
           qType: "test-o-matiq-variable",
         },
       });
-    }
-  }
-
-  private async runTestSuites() {
-    for (let [testSuiteName, testSuiteDefinition] of Object.entries(
-      this.specs.spec.data
-    )) {
-      const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
-
-      const testResults = await testSuite.performTests();
-
-      // if at least one if the tests is false then the overall status
-      // of the test suite is false as well
-      this.testResults[testSuiteName] = {
-        status:
-          testResults.map((t) => t.status).some((s) => s == false) == false
-            ? true
-            : false,
-        totalTests: testSuiteDefinition.tests.length,
-        failedTests: testResults.filter((t) => t.status == false).length,
-        totalElapsedTime: parseFloat(
-          testResults
-            .reduce((acc, testResult) => acc + testResult.timings.elapsed, 0)
-            .toFixed(2)
-        ),
-        tests: testResults,
-      };
-
-      // for (let test of testSuite.tests) {
-      // if (test.type == "scalar") this.processScalar(test);
-      // }
-      // if (dataTest.Selections) {
-      //   // TODO: emit selections
-      //   const selection = new Selection(dataTest.Selections, this.qlikApp);
-      //   const makeSelections = await selection.makeSelections();
-      // }
-      // if (dataTest.Tests.Scalar) await this.processScalar(dataTest);
-      // if (dataTest.Tests.List) await this.processList(dataTest);
     }
   }
 

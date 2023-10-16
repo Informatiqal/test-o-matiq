@@ -67,7 +67,7 @@
         "Variable": {
           "$ref": "#/definitions/IMetaVariable"
         },
-        "Object": {
+        "VizObject": {
           "type": "array",
           "items": {
             "type": "string"
@@ -441,10 +441,6 @@
     "IScalar": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name of the test"
-        },
         "description": {
           "type": "string",
           "description": "Short description"
@@ -466,7 +462,6 @@
         }
       },
       "required": [
-        "name",
         "expression",
         "operator"
       ],
@@ -475,7 +470,7 @@
     "IList": {
       "type": "object",
       "properties": {
-        "name": {
+        "fieldName": {
           "type": "string"
         },
         "description": {
@@ -492,7 +487,7 @@
         }
       },
       "required": [
-        "name",
+        "fieldName",
         "values",
         "operation"
       ],
@@ -587,10 +582,20 @@
           "type": "string"
         },
         "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          ]
         },
         "byName": {
           "not": {}

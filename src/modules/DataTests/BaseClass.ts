@@ -7,7 +7,7 @@ export abstract class DataTestsBase {
 
   constructor() {}
 
-  abstract run(): Promise<TestEvaluationResult>;
+  abstract process(): Promise<TestEvaluationResult>;
 
   async applySelections() {
     if (this.test.selections)

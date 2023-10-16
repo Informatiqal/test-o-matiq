@@ -1,6 +1,6 @@
 import { IDataModel, ITestMetaResult } from "../../../interface/Specs";
 import { EventsBus } from "../../../util/EventBus";
-import { concatResults } from "../../../util/common";
+import { Timing, concatResults } from "../../../util/common";
 import { IAppMixin } from "../../../interface/Mixin";
 
 export class DataModel {
@@ -32,6 +32,10 @@ export class DataModel {
    * Fields content is not checked
    */
   private async field() {
+    const timing = new Timing();
+    timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> Field");
+
     const fields = await this.app.mGetFields();
 
     const notFound = this.dataModelData.Field.filter(
@@ -40,22 +44,25 @@ export class DataModel {
 
     const fieldStatus = notFound.length > 0 ? false : true;
 
-    if (!fieldStatus) {
-      this.emitter.emit("testError", {
-        group: "Meta",
-        subGroup: "Data Model",
-        name: "Fields exists",
-        reason: `Field(s) not found: ${concatResults(notFound)}`,
-      });
-    }
+    timing.stop();
 
-    return {
+    const result: ITestMetaResult = {
+      name: "Meta -> DataModel -> Field",
       status: fieldStatus,
-      name: "Fields exists",
       message: !fieldStatus
         ? `${notFound.length} field(s) not found: ${concatResults(notFound)}`
-        : "Passed: All fields are present",
+        : "All fields are present",
+      type: "meta",
+      timings: {
+        start: timing.startTime,
+        end: timing.endTime,
+        elapsed: timing.elapsedTime,
+      },
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 
   /**
@@ -63,6 +70,10 @@ export class DataModel {
    * Tables content is not checked
    */
   private async table() {
+    const timing = new Timing();
+    timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> Table");
+
     const tables = await this.app.mGetTables();
 
     const notFound = this.dataModelData.Table.filter(
@@ -71,28 +82,35 @@ export class DataModel {
 
     const tableStatus = notFound.length > 0 ? false : true;
 
-    if (!tableStatus) {
-      this.emitter.emit("testError", {
-        group: "Meta",
-        subGroup: "Data Model",
-        name: "Table exists",
-        reason: `Table(s) not found: ${concatResults(notFound)}`,
-      });
-    }
+    timing.stop();
 
-    return {
+    const result: ITestMetaResult = {
+      name: "Meta -> DataModel -> Table",
       status: tableStatus,
-      name: "Table exists",
       message: !tableStatus
         ? `${notFound.length} tables(s) not found: ${concatResults(notFound)}`
-        : "Passed: All tables are present",
+        : "All tables are present",
+      type: "meta",
+      timings: {
+        start: timing.startTime,
+        end: timing.endTime,
+        elapsed: timing.elapsedTime,
+      },
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 
   /**
    * Check if the data mode have synthetic keys
    */
   private async syntheticKeys() {
+    const timing = new Timing();
+    timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> SyntheticKeys");
+
     const tables = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,
       {} as EngineAPI.ISize,
@@ -110,39 +128,44 @@ export class DataModel {
         ? false
         : true;
 
-    if (!synthTableStatus) {
-      this.emitter.emit("testError", {
-        group: "Meta",
-        subGroup: "Data Model",
-        name: "Synthetic keys exists",
-        reason: `Synthetic table(s) found: ${concatResults(
-          synthTables.map((t) => t.qName)
-        )}`,
-      });
-    }
+    timing.stop();
 
     const suppressedMessage: string =
       synthTables.length > 0 &&
       this.dataModelData.hasOwnProperty("SyntheticKeys") &&
       this.dataModelData.SyntheticKeys == true
-        ? `Passed: Synthetic tables exists but "SyntheticKeys" property is set to "true"`
-        : `Passed: Synth tables do not exist`;
+        ? `Synthetic tables exists but "SyntheticKeys" property is set to "true"`
+        : `Synth tables do not exist`;
 
-    return {
+    const result: ITestMetaResult = {
+      name: "Meta -> DataModel -> SyntheticKeys",
       status: synthTableStatus,
-      name: "Synth tables exists",
       message: !synthTableStatus
         ? `Synthetic table(s) found: ${concatResults(
             synthTables.map((t) => t.qName)
           )}`
         : suppressedMessage,
+      type: "meta",
+      timings: {
+        start: timing.startTime,
+        end: timing.endTime,
+        elapsed: timing.elapsedTime,
+      },
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 
   /**
    * Check if alwaysOneSelected is present for the provided fields
    */
   private async alwaysOneSelected() {
+    const timing = new Timing();
+    timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> AlwaysOneSelected");
+
     const allFields = await this.app.mGetFields();
 
     const oneSelectedFields = await Promise.all(
@@ -165,23 +188,22 @@ export class DataModel {
 
     const alwaysOneSelectedStatus = notFound.length > 0 ? false : true;
 
-    if (!alwaysOneSelectedStatus) {
-      this.emitter.emit("testError", {
-        group: "Meta",
-        subGroup: "Data Model",
-        name: "Always one selected fields present",
-        reason: `${notFound.length} field(s) not found: ${concatResults(
-          notFound
-        )}`,
-      });
-    }
-
-    return {
+    const result: ITestMetaResult = {
+      name: "Meta -> DataModel -> AlwaysOneSelected",
       status: alwaysOneSelectedStatus,
-      name: "Always One Selected fields exists",
       message: !alwaysOneSelectedStatus
         ? `${notFound.length} field(s) not found: ${concatResults(notFound)}`
-        : "Passed: All fields are present and qOneAndOnlyOne property is set for them",
+        : "All fields are present and qOneAndOnlyOne property is set for them",
+      type: "meta",
+      timings: {
+        start: timing.startTime,
+        end: timing.endTime,
+        elapsed: timing.elapsedTime,
+      },
     };
+
+    this.emitter.emit("testResult", result);
+
+    return result;
   }
 }

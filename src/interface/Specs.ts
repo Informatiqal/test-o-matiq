@@ -76,7 +76,7 @@ export interface IMeta {
   /**
    * List of object id that should exists in the app
    */
-  Object?: string[];
+  VizObject?: string[];
   /**
    * List of data connections that should exists
    */
@@ -111,7 +111,7 @@ export interface IScalar {
   /**
    * Name of the test
    */
-  name: string;
+  // name?: string;
   /**
    * Short description
    */
@@ -143,7 +143,8 @@ export interface IScalar {
 }
 
 export interface IList {
-  name: string;
+  // name?: string;
+  fieldName: string;
   description?: string;
   values: string[];
   operation: IListOperator;
@@ -152,11 +153,6 @@ export interface IList {
 export interface Measure {
   label: string;
   calculation: string;
-}
-
-export interface Result {
-  // columns: string[];
-  // rows: any[][];
 }
 
 export interface ITableTestCase {
@@ -336,74 +332,46 @@ export interface Runbook {
   debug?: boolean;
 }
 
+export interface Timings {
+  start: string;
+  end: string;
+  elapsed: number;
+  message?: string;
+}
+
 export interface ITestMetaResult {
-  name?: string;
-  status?: boolean;
-  message: string;
-}
-
-export interface IGroupResult {
-  status: boolean;
-  group: string;
-  totalTests: number;
-  failedTests: number;
-  startTime: Date;
-  endTime: Date;
-  elapsedTime: number;
-  testResults: ITestMetaResult[];
-}
-
-export interface TestEvaluationResult {
   status: boolean;
   name: string;
-  type: "scalar" | "list" | "table";
-  timings: {
-    start: string;
-    end: string;
-    elapsed: number;
-  };
   message: string;
-  currentSelections: {
-    selections: qSelections[];
-    timings: {
-      start: string;
-      end: string;
-      elapsed: number;
-      message?: string;
-    };
-  };
+  timings: Timings;
+  type: "scalar" | "list" | "table" | "meta";
+}
+
+export interface CurrentSelections {
+  selections: qSelections[];
+  timings: Timings;
+}
+
+export interface ITestDataResult extends ITestMetaResult {
+  currentSelections: CurrentSelections;
+}
+
+// export interface TestMetaResult {}
+
+export interface TestEvaluationResult extends ITestMetaResult {
+  // status: boolean;
+  // name: string;
+  // message: string;
+  // timings: Timings;
+  currentSelections: CurrentSelections;
 }
 
 export interface TestSuiteResult {
   status: boolean;
   tests: TestEvaluationResult[] | ITestMetaResult[];
-  totalTests: number;
-  failedTests: number;
+  // totalTests: number;
+  // failedTests: number;
   totalElapsedTime: number;
-}
-
-export interface IEventError {
-  group: string;
-  subGroup?: string;
-  name: string;
-  reason: string;
-}
-
-export interface IEventDebug {
-  // group: string;
-  // subGroup?: string;
-  name: string;
-  message: string;
-}
-
-export interface IEventGroupStartEnd {
-  group: string;
-  message: string;
-  isFinished: boolean;
-  status: boolean;
-  elapsedTime: number;
-  totalTests: number;
-  failedTests: number;
 }
 
 // props should have ONE OF byName or field <-> name
@@ -441,7 +409,7 @@ export type IPropsSelection =
 
 export type Selection = {
   field: string;
-  values: string[];
+  values: string[] | number[];
   byName?: undefined;
   // name: string;
 };
@@ -478,10 +446,6 @@ export type SelectionByNameArray = {
   values?: undefined;
   name: string;
 };
-
-export interface TestDetails {
-  //
-}
 
 export interface qSelections {
   qTotal: number;

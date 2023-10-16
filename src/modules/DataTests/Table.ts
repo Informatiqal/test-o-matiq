@@ -98,7 +98,7 @@ export class Table {
     //       status: tableResultStatus,
     //       message: !tableResultStatus
     //         ? `${notFound.length} row(s) not found: ${notFound.join(", ")}`
-    //         : `Passed: All rows and values are present`,
+    //         : `All rows and values are present`,
     //     }));
     //   });
 
