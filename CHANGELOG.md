@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - fix and update the return data (to be consistent)
 - fix and update the emitters. At the moment the only emit event that is raised is when task is complete. In the near future more events will be added (like `debug`)
 - general small codebase refactoring
+- dependency updates
 
 ## [0.4.1] - 2023-09-24
 
