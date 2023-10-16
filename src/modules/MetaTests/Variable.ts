@@ -28,6 +28,7 @@ export class VariablesExists {
   async variablesExists(): Promise<ITestMetaResult> {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> Variables -> Exists");
 
     const notFoundVariables = await Promise.all(
       this.variables.Exists.map(async (t) =>
@@ -74,6 +75,7 @@ export class VariablesExists {
   async variablesDoNotExists(): Promise<ITestMetaResult> {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> Variables -> DoNotExists");
 
     const foundVariables = await Promise.all(
       this.variables.DoNotExists.map(async (t) =>
@@ -109,6 +111,12 @@ export class VariablesExists {
       },
     };
 
+    // this.emitter.emit(
+    //   "testEnd",
+    //   "Meta -> Variables -> DoNotExists",
+    //   result.status,
+    //   result.message
+    // );
     this.emitter.emit("testResult", result);
 
     return result;

@@ -33,6 +33,7 @@ export class Scalar extends DataTestsBase {
 
   async process(): Promise<ITestDataResult> {
     this.timing.start();
+    this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
     const currentSelections = await this.applySelections();

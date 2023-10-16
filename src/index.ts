@@ -67,9 +67,12 @@ export class TestOMatiq {
   }
 
   //TODO: filter testSuites based on the provided option (if any. if not - all testSuites are active)
-  async run(options?: {
-    testSuites?: string[];
-  }): Promise<{ [k: string]: ITestDataResult[] | ITestMetaResult[] }> {
+  async run(options?: { testSuites?: string[] }): Promise<{
+    tests: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
+    totalTime: number;
+    failedTests: number;
+    passedTests: number;
+  }> {
     // check if test suites have to be filtered first
     if (options?.testSuites?.length > 0)
       this.specs.spec.data = Object.fromEntries(
@@ -91,7 +94,23 @@ export class TestOMatiq {
     if (this.specs.spec?.meta) await this.runMetaTests();
     if (this.specs.spec?.data) await this.runDataTests();
 
-    return this.testResults;
+    let failedTests = 0;
+    let passedTests = 0;
+    let totalTime = 0;
+
+    Object.entries(this.testResults).map(([testName, testsResults]) => {
+      testsResults.map((test: ITestDataResult) => {
+        test.status ? passedTests++ : failedTests++;
+        totalTime += test.timings.elapsed;
+      });
+    });
+
+    return {
+      tests: this.testResults,
+      totalTime: totalTime,
+      passedTests: passedTests,
+      failedTests: failedTests,
+    };
   }
 
   private async runMetaTests() {

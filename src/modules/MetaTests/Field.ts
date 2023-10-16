@@ -19,6 +19,7 @@ export class FieldCounts {
     let overallStatus = true;
 
     this.timing.start();
+    this.emitter.emit("testStart", "Meta -> Field");
 
     return await Promise.all(
       this.fields.map(async (f) => {
@@ -37,12 +38,17 @@ export class FieldCounts {
             name: "Field distinct counts",
             message: !countStatus
               ? `Field "${f.name}" have ${cardinal} values. Expected ${f.count}`
-              : `Field "${f.name}" have ${cardinal} values`,
+              : `Field "${f.name}" have ${cardinal} values.`,
           };
 
           return fieldResult;
         } catch (e) {
-          return { name: "Meta -> Field", status: false, message: e.message };
+          this.timing.stop();
+          return {
+            status: false,
+            name: "Field distinct counts",
+            message: e.message,
+          };
         }
       })
     ).then((testResults) => {
@@ -51,7 +57,7 @@ export class FieldCounts {
       const result: ITestMetaResult = {
         name: "Meta -> Field",
         status: overallStatus,
-        message: testResults.map((r) => r.message).join("\n"),
+        message: testResults.map((r) => r.message).join("\n\t"),
         type: "meta",
         timings: {
           start: this.timing.startTime,
@@ -70,11 +76,19 @@ export class FieldCounts {
    * Return the cardinal values count for the provided field name
    */
   private async getFieldCounts(fieldName: string) {
-    try {
-      const f = await this.app.getField(fieldName);
-      return await f.getCardinal();
-    } catch (e) {
-      throw new Error(`Field "${fieldName}" not found`);
-    }
+    // try {
+    //   const f = await this.app.getField(fieldName);
+    //   return await f.getCardinal();
+    // } catch (e) {
+    //   throw new Error(`Field "${fieldName}" not found`);
+    // }
+
+    const f = await this.app
+      .getField(fieldName)
+      .then((f) => f.getCardinal())
+      .then((l) => l)
+      .catch((e) => {
+        throw new Error(`Field "${fieldName}" not found`);
+      });
   }
 }

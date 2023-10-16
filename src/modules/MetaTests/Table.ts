@@ -21,6 +21,7 @@ export class TableCounts {
    */
   async process(): Promise<ITestMetaResult[]> {
     this.timing.start();
+    this.emitter.emit("testStart", "Meta -> Tables");
 
     const { qtr } = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,

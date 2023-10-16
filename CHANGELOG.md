@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5] - 2023-09-24
+
+- fix and update the return data (to be consistent)
+- fix and update the emitters. At the moment the only emit event that is raised is when task is complete. In the near future more events will be added (like `debug`)
+- general small codebase refactoring
+
 ## [0.4.1] - 2023-09-24
 
 - [#124](https://github.com/Informatiqal/test-o-matiq/issues/124) the json schema is updated to include the latest changes (mostly related to the selections section)

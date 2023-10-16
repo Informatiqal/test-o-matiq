@@ -32,6 +32,7 @@ export class List extends DataTestsBase {
 
   async process(): Promise<ITestDataResult> {
     this.timing.start();
+    this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
     const currentSelections = await this.applySelections();
@@ -59,9 +60,7 @@ export class List extends DataTestsBase {
       );
       if (notFound.length > 0) {
         testStatus = false;
-        testStatusMessage = `Values not found - ${concatResults(
-          notFound
-        )}`;
+        testStatusMessage = `Values not found - ${concatResults(notFound)}`;
       } else {
         testStatusMessage = "All specified values exists in the field/list";
       }

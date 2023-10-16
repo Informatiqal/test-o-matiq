@@ -4,13 +4,9 @@ import { EventEmitter } from "events";
 
 export declare interface EventsBus {
   on(event: "testResult", listener: (name: ITestMetaResult) => void): this;
+  on(event: "testStart", listener: (name: string) => void): this;
   emit(event: string | symbol, ...args: any[]): boolean;
-  // on(event: "testError", listener: (name: IEventError) => void): this;
-  // on(event: "all", listener: (name: string) => void): this;
-  // on(event: "group", listener: (body: IEventGroupStartEnd) => void): this;
-  // on(event: "group:result", listener: (body: IGroupResult) => void): this;
   // on(event: "debug", listener: (name: IEventDebug) => void): this;
-  // on(event: "error", listener: (name: IEventError) => void): this;
 }
 
 export class EventsBus extends EventEmitter {

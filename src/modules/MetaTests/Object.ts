@@ -20,6 +20,7 @@ export class QObject {
    */
   async run(): Promise<ITestMetaResult[]> {
     this.timing.start();
+    this.emitter.emit("testStart", "Meta -> Objects");
 
     const notFoundObjects: string[] = await this.app
       .getAllInfos()
@@ -31,7 +32,7 @@ export class QObject {
       });
 
     const result: ITestMetaResult = {
-      name: "Meta -> Field",
+      name: "Meta -> Objects",
       status: notFoundObjects.length > 0 ? false : true,
       message:
         notFoundObjects.length > 0

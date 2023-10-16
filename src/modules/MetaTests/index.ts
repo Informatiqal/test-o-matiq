@@ -81,13 +81,6 @@ export class Meta {
 
     const results = await (await Promise.all(promises)).flat();
 
-    // results.map((r) => {
-    //   if (r.status == false) {
-    //     this.isFailedGroup = true;
-    //     this.failedTests++;
-    //   }
-    // });
-
     this.endTime = new Date();
     this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
 

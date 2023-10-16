@@ -34,6 +34,7 @@ export class DataModel {
   private async field() {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> Field");
 
     const fields = await this.app.mGetFields();
 
@@ -71,6 +72,7 @@ export class DataModel {
   private async table() {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> Table");
 
     const tables = await this.app.mGetTables();
 
@@ -107,6 +109,7 @@ export class DataModel {
   private async syntheticKeys() {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> SyntheticKeys");
 
     const tables = await this.app.getTablesAndKeys(
       {} as EngineAPI.ISize,
@@ -161,6 +164,7 @@ export class DataModel {
   private async alwaysOneSelected() {
     const timing = new Timing();
     timing.start();
+    this.emitter.emit("testStart", "Meta -> DataModel -> AlwaysOneSelected");
 
     const allFields = await this.app.mGetFields();
 

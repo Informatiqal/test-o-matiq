@@ -20,6 +20,7 @@ export class DataConnections {
    */
   async process(): Promise<ITestMetaResult[]> {
     this.timing.start();
+    this.emitter.emit("testStart", "Meta -> DataConnections");
 
     const notFoundDataConnections: string[] = await this.app
       .getConnections()
