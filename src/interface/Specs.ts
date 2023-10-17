@@ -300,6 +300,21 @@ export interface Spec {
 //   XL = "eXcluded Locked",
 // }
 
+export interface EnvironmentDesktop {
+  host: string;
+  appId: string;
+  edition: "desktop";
+}
+
+export interface EnvironmentSaaS {
+  host: string;
+  appId: string;
+  edition: "saas";
+  authentication?: {
+    apiKey: string;
+  };
+}
+
 export interface Runbook {
   /**
    * Author name
@@ -317,6 +332,7 @@ export interface Runbook {
   //  * Skip the current tests
   //  */
   // skip?: boolean;
+  environment: EnvironmentDesktop | EnvironmentSaaS;
   /**
    * The test specification
    */

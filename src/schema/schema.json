@@ -13,6 +13,16 @@
           "type": "string",
           "description": "Short description"
         },
+        "environment": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EnvironmentDesktop"
+            },
+            {
+              "$ref": "#/definitions/EnvironmentSaaS"
+            }
+          ]
+        },
         "spec": {
           "$ref": "#/definitions/Spec",
           "description": "The test specification"
@@ -30,7 +40,62 @@
         }
       },
       "required": [
+        "environment",
         "spec"
+      ],
+      "additionalProperties": false
+    },
+    "EnvironmentDesktop": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "edition": {
+          "type": "string",
+          "const": "desktop"
+        }
+      },
+      "required": [
+        "host",
+        "appId",
+        "edition"
+      ],
+      "additionalProperties": false
+    },
+    "EnvironmentSaaS": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "edition": {
+          "type": "string",
+          "const": "saas"
+        },
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "apiKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "apiKey"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "host",
+        "appId",
+        "edition"
       ],
       "additionalProperties": false
     },

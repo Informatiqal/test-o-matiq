@@ -151,8 +151,8 @@ export class TestOMatiq {
       .map((testSuite) =>
         this.specs.spec.data[testSuite].tests
           .map((test) => [
-            ...test.selections,
-            ...this.specs.spec.data[testSuite].selections,
+            ...(test.selections ?? []),
+            ...this.specs.spec.data[testSuite].selections ?? [],
           ])
           .flat()
       )

@@ -23,6 +23,8 @@ function main() {
   const output = generateSchema();
 
   writeSchema(output);
+
+  console.log(`Schema generated at ${schema_path}`);
 }
 
 main();
