@@ -1,6 +1,6 @@
 {
   "name": "test-o-matiq",
-  "version": "0.4.6",
+  "version": "0.5.0",
   "description": "Data testing for Qlik apps",
   "license": "MIT",
   "author": {
@@ -53,9 +53,9 @@
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
-    "@types/enigma.js": "^2.2.3",
-    "@types/node": "20.8.6",
-    "@types/qlik-engineapi": "^12.67.14",
+    "@types/enigma.js": "^2.2.4",
+    "@types/node": "20.8.7",
+    "@types/qlik-engineapi": "^12.67.15",
     "dotenv": "16.3.1",
     "esm": "^3.2.25",
     "nyc": "15.1.0",

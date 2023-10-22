@@ -11,6 +11,9 @@ import { TableCounts } from "./Table";
 import { VariablesExists } from "./Variable";
 import { QObject } from "./Object";
 import { DataConnections } from "./DataConnections";
+import { MasterDimensions } from "./MasterItems/Dimensions";
+import { MasterMeasures } from "./MasterItems/Measures";
+import { MasterVisualizations } from "./MasterItems/Visualizations";
 
 export class Meta {
   meta: IMeta;
@@ -77,6 +80,40 @@ export class Meta {
       );
       this.totalTests += this.meta.DataConnections.length;
       promises.push(dataConnections.process());
+    }
+
+    if (this.meta.MasterItems) {
+      if (this.meta.MasterItems.dimensions) {
+        const masterDimensions = new MasterDimensions(
+          this.meta.MasterItems.dimensions,
+          this.app
+        );
+        this.totalTests += this.meta.MasterItems.dimensions.length;
+
+        promises.push(masterDimensions.process());
+      }
+
+      if (this.meta.MasterItems.measures) {
+        if (this.meta.MasterItems.measures) {
+          const masterMeasures = new MasterMeasures(
+            this.meta.MasterItems.measures,
+            this.app
+          );
+          this.totalTests += this.meta.MasterItems.measures.length;
+
+          promises.push(masterMeasures.process());
+        }
+      }
+
+      if (this.meta.MasterItems.visualizations) {
+        const masterViz = new MasterVisualizations(
+          this.meta.MasterItems.visualizations,
+          this.app
+        );
+        this.totalTests += this.meta.MasterItems.visualizations.length;
+
+        promises.push(masterViz.process());
+      }
     }
 
     const results = await (await Promise.all(promises)).flat();
