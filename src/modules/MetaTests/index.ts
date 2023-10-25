@@ -1,10 +1,5 @@
 import { IAppMixin } from "../../interface/Mixin";
-import {
-  IMeta,
-  ITestDataResult,
-  ITestMetaResult,
-  TestSuiteResult,
-} from "../../interface/Specs";
+import { IMeta, ITestMetaResult } from "../../interface/Specs";
 import { DataModel } from "./DataModel/index";
 import { FieldCounts } from "./Field";
 import { TableCounts } from "./Table";
@@ -18,27 +13,15 @@ import { MasterVisualizations } from "./MasterItems/Visualizations";
 export class Meta {
   meta: IMeta;
   app: IAppMixin;
-  // private failedTests: number;
-  // private isFailedGroup: boolean;
-  private startTime: Date;
-  private endTime: Date;
-  private elapsedTime: number;
   private totalTests: number;
-  // private testResults: ITestMetaResult[];
-  // private qObject: QObject;
 
   constructor(meta: IMeta, app: IAppMixin) {
     this.meta = meta;
     this.app = app;
-    // this.failedTests = 0;
-    // this.isFailedGroup = false;
     this.totalTests = 0;
   }
 
   async run(): Promise<ITestMetaResult[]> {
-    this.startTime = new Date();
-
-    // let promises: ITestResponse[] = [];
     let promises = [] as Promise<ITestMetaResult[]>[];
 
     if (this.meta.DataModel) {
@@ -117,9 +100,6 @@ export class Meta {
     }
 
     const results = await (await Promise.all(promises)).flat();
-
-    this.endTime = new Date();
-    this.elapsedTime = this.endTime.getTime() - this.startTime.getTime();
 
     return results;
   }

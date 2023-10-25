@@ -22,6 +22,30 @@ function generateSchema() {
 function main() {
   const output = generateSchema();
 
+  output.definitions.IMeta.properties["MasterItems"] = {
+    type: "object",
+    properties: {
+      dimensions: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      measures: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      visualizations: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+    },
+  };
+
   writeSchema(output);
 
   console.log(`Schema generated at ${schema_path}`);

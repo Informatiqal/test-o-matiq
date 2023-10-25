@@ -145,6 +145,29 @@
             "type": "string"
           },
           "description": "List of data connections that should exists"
+        },
+        "MasterItems": {
+          "type": "object",
+          "properties": {
+            "dimensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "measures": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "visualizations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       },
       "additionalProperties": false
