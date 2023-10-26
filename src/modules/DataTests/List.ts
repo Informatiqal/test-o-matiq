@@ -41,6 +41,7 @@ export class List extends DataTestsBase {
       .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
+        state: this.testDetails.state ?? "$",
       })
       .then((res) =>
         res.flattenData().map((f) => ({

@@ -39,7 +39,10 @@ export class Scalar extends DataTestsBase {
     const currentSelections = await this.applySelections();
 
     // calculate the expression (left side)
-    const leftSide = await this.evaluate(this.testDetails.expression);
+    const leftSide = await this.evaluate(
+      this.testDetails.expression,
+      this.testDetails.state
+    );
 
     // calculate the expected result (right side)
     const rightSide = (this.testDetails.result as string)
@@ -73,9 +76,9 @@ export class Scalar extends DataTestsBase {
     return result;
   }
 
-  private async evaluate(expression: string) {
+  private async evaluate(expression: string, state?: string) {
     const scalarTable = new ScalarTableObject(this.app);
-    const result = await scalarTable.evaluate(expression);
+    const result = await scalarTable.evaluate(expression, state ?? "$");
 
     // try and destroy the session object
     // its not a big deal if this operation fails for some reason

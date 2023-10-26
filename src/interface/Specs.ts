@@ -122,6 +122,11 @@ export interface IScalar {
    */
   // name?: string;
   /**
+   * In which Qlik state the expression to be calculated.
+   * Default is $
+   */
+  state?: string;
+  /**
    * Short description
    */
   description?: string;
@@ -157,6 +162,7 @@ export interface IList {
   description?: string;
   values: string[];
   operation: IListOperator;
+  state?: string;
 }
 
 export interface Measure {
