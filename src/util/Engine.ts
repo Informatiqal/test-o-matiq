@@ -88,7 +88,7 @@ export class ScalarTableObject {
       },
       qExtendsId: "",
       qMetaDef: {},
-      qStateName: state || "",
+      qStateName: state,
       qHyperCubeDef: {
         qMeasures: [
           {

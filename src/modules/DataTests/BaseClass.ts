@@ -9,11 +9,11 @@ export abstract class DataTestsBase {
 
   abstract process(): Promise<TestEvaluationResult>;
 
-  async applySelections() {
+  async applySelections(state: string) {
     if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections);
+      return await this.selections.makeSelections(this.test.selections, state);
 
-    const currentSelections = await this.selections.getCurrentSelections();
+    const currentSelections = await this.selections.getCurrentSelections(state);
 
     return {
       selections: currentSelections,

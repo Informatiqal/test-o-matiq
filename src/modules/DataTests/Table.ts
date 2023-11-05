@@ -22,7 +22,7 @@ export class Table {
     this.table = test.details as ITableTestCase;
     this.app = app;
     this.emitter = new EventsBus();
-    this.selections = Selection.getInstance();
+    this.selections = Selection.getInstance({});
 
     this.timing = new Timing();
   }
@@ -155,9 +155,9 @@ export class Table {
 
   private async applySelections() {
     if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections);
+      return await this.selections.makeSelections(this.test.selections, "");
 
-    const currentSelections = await this.selections.getCurrentSelections();
+    const currentSelections = await this.selections.getCurrentSelections("");
 
     return {
       selections: currentSelections,

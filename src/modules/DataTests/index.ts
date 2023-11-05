@@ -1,16 +1,12 @@
 import { Scalar } from "./Scalar";
 import { Selection } from "../Selections";
 import {
-  // IPropsSelections,
-  // IScalar,
-  // ISelection,
   TestCase,
   TestEvaluationResult,
   TestSuiteDefinition,
 } from "../../interface/Specs";
 import { IAppMixin } from "../../index.doc";
 import { List } from "./List";
-// import { Table } from "./Table";
 
 export class TestSuite {
   testSuite: TestSuiteDefinition;
@@ -25,7 +21,7 @@ export class TestSuite {
   ) {
     this.testSuite = testSuite;
     this.qlikApp = qlikApp;
-    this.selections = Selection.getInstance();
+    this.selections = Selection.getInstance({});
     this.testsResults = [];
   }
 
@@ -48,9 +44,12 @@ export class TestSuite {
     return this.testsResults;
   }
 
-  private async applySelections() {
+  private async applySelections(state: string) {
     if (this.testSuite.selections)
-      return await this.selections.makeSelections(this.testSuite.selections);
+      return await this.selections.makeSelections(
+        this.testSuite.selections,
+        state
+      );
 
     return [];
   }
@@ -70,7 +69,9 @@ export class TestSuite {
 
   private async runTest(test: TestCase) {
     // and make the test suite specific selections
-    const currentSelections = await this.applySelections();
+    const currentSelections = await this.applySelections(
+      test.options?.state ?? "$"
+    );
 
     if (test.type == "scalar") {
       const scalar = new Scalar(test, this.qlikApp);

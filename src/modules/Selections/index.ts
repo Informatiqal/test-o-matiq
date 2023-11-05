@@ -2,7 +2,6 @@ import {
   ICurrentSelections,
   IProps,
   IPropsSelectionArray,
-  IPropsSelections,
   ISelection,
 } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
@@ -16,18 +15,23 @@ export class Selection {
   private emitter: EventsBus;
   private propSelections: IPropsSelectionArray[];
   private documentBookmarks: { id: string; title: string }[];
+  private state: string;
   // private isDebug: boolean;
 
-  constructor(app: IAppMixin) {
+  constructor(app: IAppMixin, state: string) {
     this.app = app;
     this.emitter = new EventsBus();
+    this.state = state;
     // TODO: emit something here at all?
-    // TODO: write to log the selections actions
+    // TODO: write to log the selections actions (if debug)
   }
 
-  public static getInstance(app?: IAppMixin): Selection {
+  public static getInstance(arg: {
+    state?: string;
+    app?: IAppMixin;
+  }): Selection {
     if (!Selection.instance) {
-      Selection.instance = new Selection(app);
+      Selection.instance = new Selection(arg.app, arg.state);
     }
     return Selection.instance;
   }
@@ -40,7 +44,7 @@ export class Selection {
   //   this.isDebug = isDebug;
   // }
 
-  async makeSelections(selections: ISelection[]) {
+  async makeSelections(selections: ISelection[], state: string) {
     const timings = new Timing();
     timings.start();
 
@@ -49,19 +53,36 @@ export class Selection {
     // TODO: allow selections to be append?
     for (let selection of selections) {
       if (selection["clearAll"]) {
-        await this.clearAll();
+        await this.clearAll(state);
 
         this.emitter.emit("debug", `Cleared all selections`);
       }
 
       if (selection["field"]) {
-        await this.selectInField(selection["field"], selection["values"]);
+        await this.selectInField(
+          selection["field"],
+          selection["values"],
+          state
+        );
 
         this.emitter.emit(
           "debug",
-          `Select in field "${selection["field"]}" --> ${selection[
-            "values"
-          ].join(",")}`
+          `Select in state "${state}" in field "${
+            selection["field"]
+          }" --> ${selection["values"].join(",")}`
+        );
+
+        const currentSelections = await this.getCurrentSelections(state);
+
+        const currentSelectionsString = currentSelections
+          .map((s) => `${s.qField} (${s.qSelectedCount}): ${s.qSelected}`)
+          .join(";");
+
+        this.emitter.emit(
+          "debug",
+          `Current selections in state "${state}": ${
+            currentSelections.length > 0 ? currentSelectionsString : "EMPTY"
+          }`
         );
       }
 
@@ -75,13 +96,16 @@ export class Selection {
       }
 
       if (selection["clear"]) {
-        await this.clear(selection["clear"]);
+        await this.clear(selection["clear"], state);
 
-        this.emitter.emit("debug", `Cleared field: ${selection["clear"]}`);
+        this.emitter.emit(
+          "debug",
+          `Cleared field ${selection["clear"]} in state "${state}"`
+        );
       }
 
       if (selection["byName"]) {
-        await this.selectByName(selection);
+        await this.selectByName(selection, state);
 
         // this.emitter.emit("debug", `Cleared field: ${selection["clear"]}`);
       }
@@ -89,7 +113,7 @@ export class Selection {
 
     timings.stop();
 
-    const currentSelections = await this.getCurrentSelections();
+    const currentSelections = await this.getCurrentSelections(state);
 
     return {
       selections: currentSelections,
@@ -128,13 +152,14 @@ export class Selection {
     }
   }
 
-  async getCurrentSelections() {
+  async getCurrentSelections(state: string) {
     const sessionObjDefinitions = {
       qInfo: {
         qId: "",
         qType: "SessionLists",
       },
       qSelectionObjectDef: {},
+      qStateName: state,
     };
 
     const sessionObj = await this.app.createSessionObject(
@@ -155,11 +180,11 @@ export class Selection {
     return this.propSelections.filter((s) => name.includes(s.name));
   }
 
-  private async clearAll() {
-    return await this.app.clearAll(false);
+  private async clearAll(state: string) {
+    return await this.app.clearAll(false, state);
   }
 
-  private async clear(fieldNames: string[]) {
+  private async clear(fieldNames: string[], state: string) {
     for (let fieldName of fieldNames) {
       const field = await this.app.getField(fieldName);
 
@@ -181,27 +206,39 @@ export class Selection {
     return await this.app.applyBookmark(bookmarkDetails.id);
   }
 
-  private async selectInField(field: string, values: any[]) {
-    return await this.app.mSelectInField(field, values, true);
+  private async selectInField(field: string, values: any[], state: string) {
+    const makeSelection = await this.app.mSelectInField(
+      field,
+      values,
+      true,
+      state
+    );
+
+    return makeSelection;
   }
 
-  private async selectByName(selection: ISelection) {
+  private async selectByName(selection: ISelection, state: string) {
     const selectionDetails = this.getSelectionByName(selection["byName"]);
 
     for (let sd of selectionDetails) {
       for (let s of sd.selections) {
         if (s["clearAll"]) {
-          await this.clearAll();
-
-          this.emitter.emit("debug", `Cleared all selections`);
-        }
-
-        if (s["field"]) {
-          await this.selectInField(s["field"], s["values"]);
+          await this.clearAll(state);
 
           this.emitter.emit(
             "debug",
-            `Select in field "${s["field"]}" --> ${s["values"].join(",")}`
+            `Cleared all selections in state "${state}"`
+          );
+        }
+
+        if (s["field"]) {
+          await this.selectInField(s["field"], s["values"], state);
+
+          this.emitter.emit(
+            "debug",
+            `Select in state "${state}" in field "${s["field"]}" --> ${s[
+              "values"
+            ].join(",")}`
           );
         }
 
@@ -212,15 +249,29 @@ export class Selection {
         }
 
         if (s["clear"]) {
-          await this.clear(s["clear"]);
+          await this.clear(s["clear"], state);
 
-          this.emitter.emit("debug", `Cleared field: ${s["clear"]}`);
+          this.emitter.emit(
+            "debug",
+            `Cleared field: ${s["clear"]} in state "${state}"`
+          );
         }
 
-        if (s["byName"]) await this.selectByName(s as ISelection);
+        if (s["byName"]) {
+          await this.selectByName(s as ISelection, state);
+        }
       }
 
-      const currentSelections = await this.getCurrentSelections();
+      const currentSelections = await this.getCurrentSelections(state);
+
+      const currentSelectionsString = currentSelections
+        .map((s) => `${s.qField} (${s.qSelectedCount}): ${s.qSelected}`)
+        .join(";");
+
+      this.emitter.emit(
+        "debug",
+        `Current selections in state "${state}": ${currentSelectionsString}`
+      );
     }
   }
 }

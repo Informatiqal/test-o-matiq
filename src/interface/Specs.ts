@@ -113,7 +113,7 @@ export interface ScalarOptions {
 }
 
 export interface TableOptions {
-  blah: string;
+  // blah: string;
 }
 
 export interface IScalar {
@@ -121,11 +121,6 @@ export interface IScalar {
    * Name of the test
    */
   // name?: string;
-  /**
-   * In which Qlik state the expression to be calculated.
-   * Default is $
-   */
-  state?: string;
   /**
    * Short description
    */
@@ -162,7 +157,6 @@ export interface IList {
   description?: string;
   values: string[];
   operation: IListOperator;
-  state?: string;
 }
 
 export interface Measure {
@@ -264,7 +258,9 @@ export interface TestCase {
   details: IScalar | IList | ITableTestCase;
   options?: {
     /**
-     * In which state the expression to be made. The default option is $
+     * In which state the test to be ran. The state is  applied to the expressions and selections. 
+     * 
+     * The default option is $
      */
     state?: string;
   } & (ScalarOptions | TableOptions);

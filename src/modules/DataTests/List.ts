@@ -1,12 +1,6 @@
 import { IAppMixin } from "../../interface/Mixin";
 import { EventsBus } from "../../util/EventBus";
-import {
-  IList,
-  ITestDataResult,
-  ITestMetaResult,
-  TestCase,
-  TestEvaluationResult,
-} from "../../interface/Specs";
+import { IList, ITestDataResult, TestCase } from "../../interface/Specs";
 import { Timing, concatResults } from "../../util/common";
 import { Selection } from "../../modules/Selections";
 import { DataTestsBase } from "./BaseClass";
@@ -18,12 +12,14 @@ export class List extends DataTestsBase {
   private emitter: EventsBus;
   selections: Selection;
   private timing: Timing;
+  private state: string;
 
   constructor(test: TestCase, app: IAppMixin) {
     super();
 
     this.test = test;
-    this.selections = Selection.getInstance();
+    this.state = this.test.options?.state ?? "$";
+    this.selections = Selection.getInstance({ state: this.state });
     this.testDetails = test.details as IList;
     this.app = app;
     this.emitter = new EventsBus();
@@ -35,13 +31,13 @@ export class List extends DataTestsBase {
     this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
-    const currentSelections = await this.applySelections();
+    const currentSelections = await this.applySelections(this.state);
 
     const listValues = await this.app
       .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
-        state: this.testDetails.state ?? "$",
+        state: this.state,
       })
       .then((res) =>
         res.flattenData().map((f) => ({

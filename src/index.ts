@@ -37,7 +37,7 @@ export class TestOMatiq {
       ? this.propSelectionsToArray()
       : [];
     // setup the selections class
-    let selections = Selection.getInstance(this.qlikApp);
+    let selections = Selection.getInstance({ app: this.qlikApp });
     selections.setPropsSelections(selectionsProps as IPropsSelectionArray[]);
     // selections.setDebug(this.specs.debug ? this.specs.debug : false);
 
@@ -152,7 +152,7 @@ export class TestOMatiq {
         this.specs.spec.data[testSuite].tests
           .map((test) => [
             ...(test.selections ?? []),
-            ...this.specs.spec.data[testSuite].selections ?? [],
+            ...(this.specs.spec.data[testSuite].selections ?? []),
           ])
           .flat()
       )
