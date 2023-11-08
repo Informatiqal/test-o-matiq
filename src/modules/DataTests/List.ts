@@ -1,12 +1,6 @@
 import { IAppMixin } from "../../interface/Mixin";
 import { EventsBus } from "../../util/EventBus";
-import {
-  IList,
-  ITestDataResult,
-  ITestMetaResult,
-  TestCase,
-  TestEvaluationResult,
-} from "../../interface/Specs";
+import { IList, ITestDataResult, TestCase } from "../../interface/Specs";
 import { Timing, concatResults } from "../../util/common";
 import { Selection } from "../../modules/Selections";
 import { DataTestsBase } from "./BaseClass";
@@ -23,7 +17,7 @@ export class List extends DataTestsBase {
     super();
 
     this.test = test;
-    this.selections = Selection.getInstance();
+    this.selections = Selection.getInstance({});
     this.testDetails = test.details as IList;
     this.app = app;
     this.emitter = new EventsBus();
@@ -41,6 +35,7 @@ export class List extends DataTestsBase {
       .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
+        state: this.testDetails.state ?? "$",
       })
       .then((res) =>
         res.flattenData().map((f) => ({

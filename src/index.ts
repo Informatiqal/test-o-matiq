@@ -25,6 +25,7 @@ export class TestOMatiq {
   testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
   qlikApp: IAppMixin;
   engine: Engine;
+  private selections: Selection;
 
   constructor(specs: Runbook, qlikApp: IAppMixin, validateSchema?: boolean) {
     this.specs = specs;
@@ -37,8 +38,10 @@ export class TestOMatiq {
       ? this.propSelectionsToArray()
       : [];
     // setup the selections class
-    let selections = Selection.getInstance(this.qlikApp);
-    selections.setPropsSelections(selectionsProps as IPropsSelectionArray[]);
+    this.selections = Selection.getInstance({ app: this.qlikApp });
+    this.selections.setPropsSelections(
+      selectionsProps as IPropsSelectionArray[]
+    );
     // selections.setDebug(this.specs.debug ? this.specs.debug : false);
 
     this.engine = Engine.getInstance(this.qlikApp);
@@ -85,6 +88,12 @@ export class TestOMatiq {
       );
 
     // if (!this.specs.spec.meta && !this.specs.spec.data) return {};
+
+    // get apps alternate states and sets them into the selections class
+    const alternateStates = await this.qlikApp
+      .getAppLayout()
+      .then((layout) => layout.qStateNames);
+    this.selections.setAlternateStates(alternateStates);
 
     await this.validateExpressions();
     if (this.specs.props?.selections) await this.validateSelections();
@@ -152,7 +161,7 @@ export class TestOMatiq {
         this.specs.spec.data[testSuite].tests
           .map((test) => [
             ...(test.selections ?? []),
-            ...this.specs.spec.data[testSuite].selections ?? [],
+            ...(this.specs.spec.data[testSuite].selections ?? []),
           ])
           .flat()
       )

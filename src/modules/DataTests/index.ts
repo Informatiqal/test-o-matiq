@@ -1,16 +1,12 @@
 import { Scalar } from "./Scalar";
 import { Selection } from "../Selections";
 import {
-  // IPropsSelections,
-  // IScalar,
-  // ISelection,
   TestCase,
   TestEvaluationResult,
   TestSuiteDefinition,
 } from "../../interface/Specs";
 import { IAppMixin } from "../../index.doc";
 import { List } from "./List";
-// import { Table } from "./Table";
 
 export class TestSuite {
   testSuite: TestSuiteDefinition;
@@ -25,16 +21,13 @@ export class TestSuite {
   ) {
     this.testSuite = testSuite;
     this.qlikApp = qlikApp;
-    this.selections = Selection.getInstance();
+    this.selections = Selection.getInstance({});
     this.testsResults = [];
   }
 
   async performTests(): Promise<TestEvaluationResult[]> {
     // do not run the tests in the whole suite
-    if (
-      this.testSuite.properties?.skip &&
-      this.testSuite.properties?.skip == true
-    ) {
+    if (this.testSuite.options?.skip && this.testSuite.options?.skip == true) {
       // TODO: emit something here to indicate that the whole suite was skipped
       return [];
     }
@@ -59,6 +52,10 @@ export class TestSuite {
     for (let test of this.testSuite.tests) {
       // do not run the test if skip == true
       if (!test.skip) {
+        // clear all if clearAllBeforeEach is explicitly set to true
+        if (this.testSuite.options?.clearAllBeforeEach == true)
+          await this.qlikApp.clearAll(true);
+
         const testResult: TestEvaluationResult = await this.runTest(test);
 
         this.testsResults.push(testResult);

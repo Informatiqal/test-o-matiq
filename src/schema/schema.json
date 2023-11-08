@@ -529,6 +529,10 @@
     "IScalar": {
       "type": "object",
       "properties": {
+        "state": {
+          "type": "string",
+          "description": "In which Qlik state the expression to be calculated. Default is $"
+        },
         "description": {
           "type": "string",
           "description": "Short description"
@@ -572,6 +576,9 @@
         },
         "operation": {
           "$ref": "#/definitions/IListOperator"
+        },
+        "state": {
+          "type": "string"
         }
       },
       "required": [

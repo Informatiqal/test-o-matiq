@@ -113,7 +113,7 @@ export interface ScalarOptions {
 }
 
 export interface TableOptions {
-  blah: string;
+  // blah: string;
 }
 
 export interface IScalar {
@@ -149,6 +149,7 @@ export interface IScalar {
   operator: IScalarOperator;
   // TODO: deviation/difference?
   // deviation?: string;
+  state?: string;
 }
 
 export interface IList {
@@ -157,6 +158,7 @@ export interface IList {
   description?: string;
   values: string[];
   operation: IListOperator;
+  state?: string;
 }
 
 export interface Measure {
@@ -180,6 +182,7 @@ export type ISelection =
        * Clear all selections (perform `clearAll()`)
        */
       clearAll: boolean;
+      state?: undefined;
       field?: undefined;
       values?: undefined;
       bookmark?: undefined;
@@ -201,6 +204,7 @@ export type ISelection =
        * ```
        */
       values: (string | number)[];
+      state?: string;
       clearAll?: undefined;
       bookmark?: undefined;
       byName?: undefined;
@@ -210,6 +214,7 @@ export type ISelection =
        * NAME of the bookmark to be applied
        */
       bookmark: string;
+      state?: undefined;
       clearAll?: undefined;
       field?: undefined;
       values?: undefined;
@@ -220,6 +225,7 @@ export type ISelection =
        * NAME of the bookmark to be applied
        */
       byName: string[];
+      state?: string;
       bookmark?: undefined;
       clearAll?: undefined;
       field?: undefined;
@@ -258,10 +264,14 @@ export interface TestCase {
   details: IScalar | IList | ITableTestCase;
   options?: {
     /**
-     * In which state the expression to be made. The default option is $
+     * In which state the test to be ran. The state is  applied to the expressions and selections.
+     *
+     * The default option is $
      */
-    state?: string;
-  } & (ScalarOptions | TableOptions);
+    //   state?: string;
+    // } & (ScalarOptions | TableOptions);
+    clearBeforeEach?: boolean;
+  };
 }
 
 export interface TestSuiteDefinition {
@@ -279,7 +289,7 @@ export interface TestSuiteDefinition {
    * Test group specific properties
    * These properties are applied to ALL test cases inside the group
    */
-  properties?: {
+  options?: {
     clearAllBeforeEach?: boolean;
     skip?: boolean;
   };
@@ -373,7 +383,7 @@ export interface ITestMetaResult {
 }
 
 export interface CurrentSelections {
-  selections: qSelections[];
+  selections: { state: string; selections: qSelections[] }[];
   timings: Timings;
 }
 
