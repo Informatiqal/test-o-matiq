@@ -19,14 +19,14 @@ export class Scalar extends DataTestsBase {
   selections: Selection;
   private emitter: EventsBus;
   private timing: Timing;
-  private state: string;
+  // private state: string;
 
   constructor(test: TestCase, app: IAppMixin) {
     super();
 
     this.test = test;
-    this.state = this.test.options?.state ?? "$";
-    this.selections = Selection.getInstance({ state: this.state });
+    // this.state = this.test.options?.state ?? "$";
+    this.selections = Selection.getInstance({});
     this.testDetails = test.details as IScalar;
     this.app = app;
     this.emitter = new EventsBus();
@@ -38,16 +38,22 @@ export class Scalar extends DataTestsBase {
     this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
-    const currentSelections = await this.applySelections(this.state);
+    const currentSelections = await this.applySelections();
 
     // calculate the expression (left side)
-    const leftSide = await this.evaluate(this.testDetails.expression);
+    const leftSide = await this.evaluate(
+      this.testDetails.expression,
+      this.testDetails.state
+    );
 
     // calculate the expected result (right side)
     const rightSide = (this.testDetails.result as string)
       .toString()
       .startsWith("=")
-      ? await this.evaluate(this.testDetails.result as string)
+      ? await this.evaluate(
+          this.testDetails.result as string,
+          this.testDetails.state
+        )
       : this.testDetails.result;
 
     // compare the evaluated result with the expected
@@ -75,9 +81,9 @@ export class Scalar extends DataTestsBase {
     return result;
   }
 
-  private async evaluate(expression: string) {
+  private async evaluate(expression: string, state?: string) {
     const scalarTable = new ScalarTableObject(this.app);
-    const result = await scalarTable.evaluate(expression, this.state);
+    const result = await scalarTable.evaluate(expression, state ?? "$");
 
     // try and destroy the session object
     // its not a big deal if this operation fails for some reason

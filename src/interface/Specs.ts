@@ -149,6 +149,7 @@ export interface IScalar {
   operator: IScalarOperator;
   // TODO: deviation/difference?
   // deviation?: string;
+  state?: string;
 }
 
 export interface IList {
@@ -157,6 +158,7 @@ export interface IList {
   description?: string;
   values: string[];
   operation: IListOperator;
+  state?: string;
 }
 
 export interface Measure {

@@ -155,7 +155,7 @@ export class Table {
 
   private async applySelections() {
     if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections, "");
+      return await this.selections.makeSelections(this.test.selections);
 
     const currentSelections = await this.selections.getCurrentSelections();
 
@@ -175,8 +175,8 @@ export class Table {
     const tableObject = new TableObject(this.app);
     const result = await tableObject.evaluate(
       this.table.dimensions,
-      this.table.measures,
-      this.test.options?.state
+      this.table.measures
+      // this.test.options?.state
     );
 
     // try and destroy the session object

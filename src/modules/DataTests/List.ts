@@ -12,14 +12,12 @@ export class List extends DataTestsBase {
   private emitter: EventsBus;
   selections: Selection;
   private timing: Timing;
-  private state: string;
 
   constructor(test: TestCase, app: IAppMixin) {
     super();
 
     this.test = test;
-    this.state = this.test.options?.state ?? "$";
-    this.selections = Selection.getInstance({ state: this.state });
+    this.selections = Selection.getInstance({});
     this.testDetails = test.details as IList;
     this.app = app;
     this.emitter = new EventsBus();
@@ -31,13 +29,13 @@ export class List extends DataTestsBase {
     this.emitter.emit("testStart", this.test.name);
 
     // apply the required selections
-    const currentSelections = await this.applySelections(this.state);
+    const currentSelections = await this.applySelections();
 
     const listValues = await this.app
       .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
-        state: this.state,
+        state: this.testDetails.state ?? "$",
       })
       .then((res) =>
         res.flattenData().map((f) => ({
