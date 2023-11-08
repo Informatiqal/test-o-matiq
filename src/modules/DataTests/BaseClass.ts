@@ -11,9 +11,9 @@ export abstract class DataTestsBase {
 
   async applySelections(state: string) {
     if (this.test.selections)
-      return await this.selections.makeSelections(this.test.selections, state);
+      return await this.selections.makeSelections(this.test.selections);
 
-    const currentSelections = await this.selections.getCurrentSelections(state);
+    const currentSelections = await this.selections.getCurrentSelections();
 
     return {
       selections: currentSelections,

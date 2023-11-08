@@ -44,12 +44,9 @@ export class TestSuite {
     return this.testsResults;
   }
 
-  private async applySelections(state: string) {
+  private async applySelections() {
     if (this.testSuite.selections)
-      return await this.selections.makeSelections(
-        this.testSuite.selections,
-        state
-      );
+      return await this.selections.makeSelections(this.testSuite.selections);
 
     return [];
   }
@@ -69,9 +66,7 @@ export class TestSuite {
 
   private async runTest(test: TestCase) {
     // and make the test suite specific selections
-    const currentSelections = await this.applySelections(
-      test.options?.state ?? "$"
-    );
+    const currentSelections = await this.applySelections();
 
     if (test.type == "scalar") {
       const scalar = new Scalar(test, this.qlikApp);

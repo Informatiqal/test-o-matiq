@@ -157,7 +157,7 @@ export class Table {
     if (this.test.selections)
       return await this.selections.makeSelections(this.test.selections, "");
 
-    const currentSelections = await this.selections.getCurrentSelections("");
+    const currentSelections = await this.selections.getCurrentSelections();
 
     return {
       selections: currentSelections,
