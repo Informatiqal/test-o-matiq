@@ -289,7 +289,7 @@ export interface TestSuiteDefinition {
    * Test group specific properties
    * These properties are applied to ALL test cases inside the group
    */
-  properties?: {
+  options?: {
     clearAllBeforeEach?: boolean;
     skip?: boolean;
   };
