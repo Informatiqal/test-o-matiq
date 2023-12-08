@@ -62,7 +62,7 @@
     "rollup": "4.6.1",
     "rollup-plugin-delete": "2.0.0",
     "ts-json-schema-generator": "^1.4.1",
-    "ts-node": "10.9.1",
+    "ts-node": "10.9.2",
     "typed-emitter": "^2.1.0",
     "typedoc": "0.25.4",
     "typescript": "5.0.4",
