@@ -60,7 +60,7 @@
     "dotenv": "16.3.1",
     "esm": "^3.2.25",
     "nyc": "15.1.0",
-    "rollup": "4.9.0",
+    "rollup": "4.9.1",
     "rollup-plugin-delete": "2.0.0",
     "ts-json-schema-generator": "^1.5.0",
     "ts-node": "10.9.2",
