@@ -4,7 +4,7 @@ import {
   TestCase,
   TestEvaluationResult,
 } from "../../interface/Specs";
-import { operations } from "../../util/common";
+import { compareWithVariance, inRange, operations } from "../../util/common";
 import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
 import { Selection } from "../Selections";
@@ -25,7 +25,6 @@ export class Scalar extends DataTestsBase {
     super();
 
     this.test = test;
-    // this.state = this.test.options?.state ?? "$";
     this.selections = Selection.getInstance({});
     this.testDetails = test.details as IScalar;
     this.app = app;
@@ -54,7 +53,19 @@ export class Scalar extends DataTestsBase {
           return this.evaluate(
             result.value as string,
             this.testDetails.state
-          ).then((evaluateResult) => {
+          ).then((evaluateResult: number) => {
+            // if there is a variation specified then compare the result against it
+            if (result.variation) {
+              let { upperLimit, lowerLimit } = compareWithVariance(
+                result.variation,
+                leftSide as number
+              );
+
+              return inRange(evaluateResult, lowerLimit, upperLimit);
+            }
+
+            // if no variation then proceed with compare the result
+            // with the specified operator (default operator is ==)
             return operations[result.operator ? result.operator : "=="](
               leftSide,
               evaluateResult
@@ -75,9 +86,12 @@ export class Scalar extends DataTestsBase {
     });
 
     const messages = comparisonResults.map((result, i) => {
-      return `${result ? "PASS" : "FAIL"} ${leftSide} ${this.testDetails.results[i].operator || "=="} ${
-        this.testDetails.results[i].value
-      }`;
+      const variationMessage = this.testDetails.results[i].variation
+        ? ` (${this.testDetails.results[i].variation})`
+        : "";
+      return `${result ? "PASS" : "FAIL"} ${leftSide} ${
+        this.testDetails.results[i].operator || "=="
+      } ${this.testDetails.results[i].value}${variationMessage}`;
     });
 
     this.timing.stop();
