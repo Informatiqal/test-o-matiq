@@ -129,24 +129,28 @@ export interface IScalar {
    * Qlik expression
    */
   expression: string;
-  /**
-   * Value to compare
-   *
-   * Accept string, number or expression
-   *
-   * To be evaluated as expressions the values should start with =
-   *
-   * ```
-   * result: 100
-   * result: "abcd"
-   * result: "=sum(100)"
-   * ```
-   */
-  result?: string | number;
+  results: {
+    /**
+     * Value to compare
+     *
+     * Accept string, number or expression
+     *
+     * To be evaluated as expressions the values should start with =
+     *
+     * ```
+     * result: 100
+     * result: "abcd"
+     * result: "=sum(100)"
+     * ```
+     */
+    value: string | number;
+    operator?: IScalarOperator;
+  }[];
+  // result?: string | number;
   /**
    * TBA
    */
-  operator: IScalarOperator;
+  // operator: IScalarOperator;
   // TODO: deviation/difference?
   // deviation?: string;
   state?: string;

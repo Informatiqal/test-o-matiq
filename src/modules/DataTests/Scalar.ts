@@ -46,20 +46,39 @@ export class Scalar extends DataTestsBase {
       this.testDetails.state
     );
 
-    // calculate the expected result (right side)
-    const rightSide = (this.testDetails.result as string)
-      .toString()
-      .startsWith("=")
-      ? await this.evaluate(
-          this.testDetails.result as string,
-          this.testDetails.state
-        )
-      : this.testDetails.result;
+    let testStatus = true;
 
-    // compare the evaluated result with the expected
-    const testStatus = operations[
-      this.testDetails.operator ? this.testDetails.operator : "=="
-    ](leftSide, rightSide);
+    const comparisonResults = await Promise.all(
+      this.testDetails.results.map((result) => {
+        if (result.value.toString().startsWith("=")) {
+          return this.evaluate(
+            result.value as string,
+            this.testDetails.state
+          ).then((evaluateResult) => {
+            return operations[result.operator ? result.operator : "=="](
+              leftSide,
+              evaluateResult
+            );
+          });
+        }
+
+        return operations[result.operator ? result.operator : "=="](
+          leftSide,
+          result.value
+        );
+      })
+    ).then((results) => {
+      // if at least one of the results is failing then fail the whole test
+      testStatus = !results.includes(false);
+
+      return results;
+    });
+
+    const messages = comparisonResults.map((result, i) => {
+      return `${result ? "PASS" : "FAIL"} ${leftSide} ${this.testDetails.results[i].operator || "=="} ${
+        this.testDetails.results[i].value
+      }`;
+    });
 
     this.timing.stop();
 
@@ -72,7 +91,8 @@ export class Scalar extends DataTestsBase {
         end: this.timing.endTime,
         elapsed: this.timing.elapsedTime,
       },
-      message: `${leftSide} ${this.testDetails.operator || "=="} ${rightSide}`,
+      // message: `${leftSide} ${this.testDetails.operator || "=="} ${rightSide}`,
+      message: messages.join("\n"),
       currentSelections: currentSelections,
     };
 
