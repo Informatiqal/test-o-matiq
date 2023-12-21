@@ -300,7 +300,7 @@
           },
           "description": "What selections to be applied BEFORE running EACH test case in the group\n\nSelections are applied one after another in order of appearance - first defined, fist selected"
         },
-        "properties": {
+        "options": {
           "type": "object",
           "properties": {
             "clearAllBeforeEach": {
@@ -334,6 +334,9 @@
             "clearAll": {
               "type": "boolean",
               "description": "Clear all selections (perform `clearAll()`)"
+            },
+            "state": {
+              "not": {}
             },
             "field": {
               "not": {}
@@ -370,6 +373,9 @@
               },
               "description": "List of values to select.\n\nProvide all values as string (even if the actual values are in number format)!\n\nIf the selection should be applied via expression then start the value with \"=\". e.g. ``` { values: [\"=Only('Test')\"] } ```"
             },
+            "state": {
+              "type": "string"
+            },
             "clearAll": {
               "not": {}
             },
@@ -392,6 +398,9 @@
             "bookmark": {
               "type": "string",
               "description": "NAME of the bookmark to be applied"
+            },
+            "state": {
+              "not": {}
             },
             "clearAll": {
               "not": {}
@@ -420,6 +429,9 @@
                 "type": "string"
               },
               "description": "NAME of the bookmark to be applied"
+            },
+            "state": {
+              "type": "string"
             },
             "bookmark": {
               "not": {}
@@ -485,38 +497,14 @@
           ]
         },
         "options": {
-          "anyOf": [
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "tolerance": {
-                  "type": "string",
-                  "description": "What is the allowed tolerance/deviation between the expression and the result.\n\nEven when \"operator\" property is \"=\" the tolerance will be respected.\n\nFor example: +- 100, +- 5%, 20%, -3%"
-                },
-                "state": {
-                  "type": "string",
-                  "description": "In which state the expression to be made. The default option is $"
-                }
-              }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "blah": {
-                  "type": "string"
-                },
-                "state": {
-                  "type": "string",
-                  "description": "In which state the expression to be made. The default option is $"
-                }
-              },
-              "required": [
-                "blah"
-              ]
+          "type": "object",
+          "properties": {
+            "clearBeforeEach": {
+              "type": "boolean",
+              "description": "In which state the test to be ran. The state is  applied to the expressions and selections.\n\nThe default option is $"
             }
-          ]
+          },
+          "additionalProperties": false
         }
       },
       "required": [
@@ -529,10 +517,6 @@
     "IScalar": {
       "type": "object",
       "properties": {
-        "state": {
-          "type": "string",
-          "description": "In which Qlik state the expression to be calculated. Default is $"
-        },
         "description": {
           "type": "string",
           "description": "Short description"
@@ -541,21 +525,36 @@
           "type": "string",
           "description": "Qlik expression"
         },
-        "result": {
-          "type": [
-            "string",
-            "number"
-          ],
-          "description": "Value to compare\n\nAccept string, number or expression\n\nTo be evaluated as expressions the values should start with =\n\n``` result: 100 result: \"abcd\" result: \"=sum(100)\" ```"
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": [
+                  "string",
+                  "number"
+                ],
+                "description": "Value to compare\n\nAccept string, number or expression\n\nTo be evaluated as expressions the values should start with =\n\n``` result: 100 result: \"abcd\" result: \"=sum(100)\" ```"
+              },
+              "operator": {
+                "$ref": "#/definitions/IScalarOperator"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          }
         },
-        "operator": {
-          "$ref": "#/definitions/IScalarOperator",
+        "state": {
+          "type": "string",
           "description": "TBA"
         }
       },
       "required": [
         "expression",
-        "operator"
+        "results"
       ],
       "additionalProperties": false
     },

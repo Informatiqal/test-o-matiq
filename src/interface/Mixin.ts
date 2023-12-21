@@ -45,6 +45,16 @@ export interface IAppMixin extends EngineAPI.IApp {
     values: any[],
     toggle?: boolean,
     state?: string
+  ): Promise<{
+    selection: boolean;
+    selectMore: void;
+    destroy: void;
+  }>;
+  mSelectInFieldBySearch(
+    fieldName: string,
+    searchTerm: string,
+    toggle?: boolean,
+    state?: string
   ): Promise<boolean>;
   mCreateSessionListbox(
     fieldName: string,
