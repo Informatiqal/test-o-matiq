@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2023-12-21
+
+- dependency updates
+- Scalar - option to compare with multiple results [#182](https://github.com/Informatiqal/test-o-matiq/issues/182)
+
 ## [0.6.0] - 2023-11-08
 
 - Qlik alternate states - it is possible to define alternate states in the test suite and data tests selections sections AND in the scalar tests. State is optional and if not defined then all selections/evaluations are performed into the default state `$`
