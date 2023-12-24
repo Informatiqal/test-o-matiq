@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2023-12-21
+
+- Option to specify result variation [#140](https://github.com/Informatiqal/test-o-matiq/issues/140). For more info check the [documentation section](https://docs.informatiqal.com/test-o-matiq/structure/spec/data/#variations)
+
 ## [0.7.0] - 2023-12-21
 
 - dependency updates
