@@ -94,14 +94,6 @@ export interface IMeta {
 
 export interface ScalarOptions {
   /**
-   * What is the allowed tolerance/deviation between the expression and the result.
-   *
-   * Even when "operator" property is "=" the tolerance will be respected.
-   *
-   * For example: +- 100, +- 5%, 20%, -3%
-   */
-  tolerance?: string;
-  /**
    * What format to be applied for the expression or the result before comparison is made
    *
    * This section is optional. Formatting can be applied directly to the expression and result code
@@ -145,6 +137,16 @@ export interface IScalar {
      */
     value: string | number;
     operator?: IScalarOperator;
+    /**
+     * What is the accepted variation between the expression and the result. For example:
+     *
+     * - +-5
+     * - +-0.5%
+     * - 12 (will assume +12)
+     * - -3
+     * - etc
+     */
+    variation?: string;
   }[];
   // result?: string | number;
   /**

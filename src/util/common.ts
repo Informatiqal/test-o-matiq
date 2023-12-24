@@ -49,3 +49,78 @@ export class Timing {
     );
   }
 }
+
+// TODO: bit more work required here!
+export function compareWithVariance(variance: string, resultValue: number) {
+  let comparisonValue = parseNum(variance);
+  let upperLimit: number = 0;
+  let lowerLimit: number = 0;
+
+  if (variance.includes("%")) {
+    comparisonValue = comparisonValue / 100;
+
+    if (variance.includes("+-") || variance.includes("-+")) {
+      upperLimit = resultValue * comparisonValue + resultValue;
+      lowerLimit = resultValue - resultValue * comparisonValue;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (!variance.includes("+") && !variance.includes("-")) {
+      upperLimit = resultValue * comparisonValue + resultValue;
+      lowerLimit = upperLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (variance.includes("+") && !variance.includes("-")) {
+      upperLimit = resultValue * comparisonValue + resultValue;
+      lowerLimit = upperLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (!variance.includes("+") && variance.includes("-")) {
+      lowerLimit = resultValue - resultValue * comparisonValue;
+      upperLimit = lowerLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+  }
+
+  if (!variance.includes("%")) {
+    if (variance.includes("+-") || variance.includes("-+")) {
+      upperLimit = resultValue + comparisonValue;
+      lowerLimit = resultValue - comparisonValue;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (!variance.includes("+") && !variance.includes("-")) {
+      upperLimit = resultValue + comparisonValue;
+      lowerLimit = upperLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (variance.includes("+") && !variance.includes("-")) {
+      upperLimit = resultValue + comparisonValue;
+      lowerLimit = upperLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+
+    if (!variance.includes("+") && variance.includes("-")) {
+      lowerLimit = resultValue - comparisonValue;
+      upperLimit = lowerLimit;
+
+      return { upperLimit, lowerLimit };
+    }
+  }
+}
+
+// extract/keep numeric values from string
+export const parseNum = (str: string) => +str.replace(/[^.\d]/g, "");
+
+// check if given number is in range
+export const inRange = (num, min, max) => num >= min && num <= max;
