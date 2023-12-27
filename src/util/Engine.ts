@@ -3,7 +3,7 @@ import { IAppMixin } from "../interface/Mixin";
 
 export class Engine {
   static instance: Engine;
-  private qApp: IAppMixin;
+  qApp: IAppMixin;
   scalarTable: ScalarTableObject;
 
   constructor(qApp: IAppMixin) {

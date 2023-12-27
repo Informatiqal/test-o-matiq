@@ -1,12 +1,12 @@
 import Ajv from "ajv";
 import {
+  App,
   IPropsSelectionArray,
   IScalar,
   ISelection,
   ITestDataResult,
   ITestMetaResult,
   Runbook,
-  TestSuiteResult,
 } from "./interface/Specs";
 import { Selection, SelectionValidation } from "./modules/Selections";
 import { EventsBus } from "./util/EventBus";
@@ -15,36 +15,58 @@ import { Meta } from "./modules/MetaTests";
 import { Engine } from "./util/Engine";
 
 import { IAppMixin } from "./interface/Mixin";
-import * as schema from "./schema/schema.json" assert { type: "json" };
 
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
+import * as schema from "./schema/schema.json" assert { type: "json" };
+import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
+import { docMixin } from "enigma-mixin";
+import * as enigma from "enigma.js";
+import WebSocket from "ws";
 
 export class TestOMatiq {
   specs: Runbook;
   emitter: EventsBus;
   testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
-  qlikApp: IAppMixin;
-  engine: Engine;
-  private selections: Selection;
+  // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[];
+  qlikApps: { [k: string]: App };
+  private engine: { [key: string]: Engine } = {};
+  private selections: { [key: string]: Selection } = {};
+  // private mainApp: { name: string; app: IAppMixin; isMain: boolean };
+  private mainApp: string;
 
-  constructor(specs: Runbook, qlikApp: IAppMixin, validateSchema?: boolean) {
+  constructor(
+    specs: Runbook,
+    // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[],
+    // qlikApps: { [k: string]: App },
+    validateSchema?: boolean
+  ) {
     this.specs = specs;
-    this.qlikApp = qlikApp;
+    // this.qlikApps = qlikApps;
+    // this.qlikApps = qlikApps;
     this.emitter = new EventsBus();
     this.testResults = {};
-    validateSchema = validateSchema == undefined ? true : validateSchema;
+
+    // if (validateSchema != undefined) validateSchema = validateSchema || true;
 
     const selectionsProps = this.specs.props?.selections
       ? this.propSelectionsToArray()
       : [];
-    // setup the selections class
-    this.selections = Selection.getInstance({ app: this.qlikApp });
-    this.selections.setPropsSelections(
-      selectionsProps as IPropsSelectionArray[]
-    );
-    // selections.setDebug(this.specs.debug ? this.specs.debug : false);
 
-    this.engine = Engine.getInstance(this.qlikApp);
+    // Object.entries(this.qlikApps).forEach(([name, qlikApp]) => {
+    //   this.selections[name] = Selection.getInstance({
+    //     app: qlikApp.app,
+    //   });
+
+    //   this.selections[name].setPropsSelections(
+    //     selectionsProps as IPropsSelectionArray[]
+    //   );
+    //   this.engine[name] = Engine.getInstance(qlikApp.app);
+
+    //   if (qlikApp.isMain) this.mainApp = name;
+    // });
+
+    // if (Object.keys(this.qlikApps).length == 1)
+    //   this.mainApp = Object.keys(this.qlikApps)[0];
 
     // this.testGroups = Object.entries(specs.spec).map((value) =>
     //   value[0].toString()
@@ -76,6 +98,7 @@ export class TestOMatiq {
     failedTests: number;
     passedTests: number;
   }> {
+    await this.openApps();
     // check if test suites have to be filtered first
     if (options?.testSuites?.length > 0)
       this.specs.spec.data = Object.fromEntries(
@@ -89,14 +112,8 @@ export class TestOMatiq {
 
     // if (!this.specs.spec.meta && !this.specs.spec.data) return {};
 
-    // get apps alternate states and sets them into the selections class
-    const alternateStates = await this.qlikApp
-      .getAppLayout()
-      .then((layout) => layout.qStateNames);
-    this.selections.setAlternateStates(alternateStates);
-
-    await this.validateExpressions();
-    if (this.specs.props?.selections) await this.validateSelections();
+    // await this.validateExpressions();
+    // if (this.specs.props?.selections) await this.validateSelections();
     // this.validateTaskOperatorResult();
 
     if (this.specs.props?.variables) await this.createSessionVariables();
@@ -123,7 +140,10 @@ export class TestOMatiq {
   }
 
   private async runMetaTests() {
-    const meta = new Meta(this.specs.spec.meta || undefined, this.qlikApp);
+    const meta = new Meta(
+      this.specs.spec.meta || undefined,
+      this.engine[this.mainApp].qApp
+    );
     const metaResult = await meta.run();
 
     // this.emitter.emit("group:result", metaResult);
@@ -134,7 +154,10 @@ export class TestOMatiq {
     for (let [testSuiteName, testSuiteDefinition] of Object.entries(
       this.specs.spec.data
     )) {
-      const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
+      const testSuite = new TestSuite(
+        testSuiteDefinition,
+        this.engine[this.mainApp].qApp
+      );
 
       const testResults = await testSuite.performTests();
 
@@ -170,7 +193,8 @@ export class TestOMatiq {
     const selectionValidation = new SelectionValidation(
       [...selectionsProps, ...testsSelections] as ISelection[],
       this.specs.props,
-      this.qlikApp
+      // TODO: only the main app?
+      this.engine[this.mainApp].qApp
     );
 
     const {
@@ -227,8 +251,13 @@ export class TestOMatiq {
       await Promise.all(
         Object.entries(this.specs.props.variables).map(
           ([varName, varDefinition]) => {
-            return _this.engine
-              .checkExpression(varDefinition)
+            // TODO: only the main app?
+            return _this.engine[this.mainApp].qApp
+              .checkExpression(
+                varDefinition["expression"]
+                  ? varDefinition["expression"]
+                  : varDefinition
+              )
               .then((v) => null)
               .catch(
                 (e) =>
@@ -253,7 +282,8 @@ export class TestOMatiq {
         // TODO: validate the possible expressions in the result property
         // validate scalar tests
         if (test.type == "scalar") {
-          return _this.engine
+          // TODO: only the main app?
+          return _this.engine[this.mainApp].qApp
             .checkExpression((test.details as IScalar).expression)
             .then((v) => null)
             .catch(
@@ -306,9 +336,20 @@ export class TestOMatiq {
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables
     )) {
-      await this.qlikApp.createSessionVariable({
+      // assume the main qlik app
+      let qlikApp = this.engine[this.mainApp].qApp;
+
+      // if specific app is defined then create the
+      // variable there
+      if (varDefinition["app"]) {
+        qlikApp = this.engine[varDefinition["app"]].qApp;
+      }
+
+      await qlikApp.createSessionVariable({
         qName: varName,
-        qDefinition: varDefinition,
+        qDefinition: varDefinition["expression"]
+          ? varDefinition["expression"]
+          : varDefinition,
         qIncludeInBookmark: false,
         qInfo: {
           qType: "test-o-matiq-variable",
@@ -326,5 +367,57 @@ export class TestOMatiq {
     //   .map((t) => {
     //     const details = t.details as IScalar;
     //   });
+  }
+
+  /**
+   * Open all apps specified in the environment.apps section
+   * If any of the apps fails (for some reason) then fail everything and dont continue
+   */
+  private async openApps() {
+    const _this = this;
+
+    const enigmaConfig: enigmaJS.IConfig = {
+      Promise: Promise,
+      schema: enigmaSchema,
+      mixins: docMixin,
+      url: "ws://127.0.0.1:4848/app/engineData",
+      createSocket: (url) => new WebSocket(url),
+    };
+
+    const selectionsProps = this.specs.props?.selections
+      ? this.propSelectionsToArray()
+      : [];
+
+    await Promise.all(
+      Object.keys(this.specs.environment.apps).map(async (a) => {
+        const enigmaClass = (enigma as any).default as IEnigmaClass;
+        const qlikSession = enigmaClass.create(enigmaConfig);
+        const global: EngineAPI.IGlobal = await qlikSession.open();
+        const doc = (await global.openDoc(
+          _this.specs.environment.apps[a].id
+        )) as IAppMixin;
+
+        this.selections[a] = Selection.getInstance({
+          app: doc,
+        });
+
+        this.selections[a].setPropsSelections(
+          selectionsProps as IPropsSelectionArray[]
+        );
+
+        _this.engine[a] = Engine.getInstance(doc);
+        if (this.specs.environment.apps[a].isMain) this.mainApp = a;
+
+        // get apps alternate states and sets them into the selections class
+        const alternateStates = await doc
+          .getAppLayout()
+          .then((layout) => layout.qStateNames);
+
+        this.selections[a].setAlternateStates(alternateStates);
+      })
+    );
+
+    if (Object.keys(this.engine).length == 1 && !this.mainApp)
+      this.mainApp = Object.keys(this.engine)[0];
   }
 }
