@@ -7,9 +7,9 @@ import {
 import { compareWithVariance, inRange, operations } from "../../util/common";
 import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
-import { Selection } from "../Selections";
+import { Selection } from "../Engine/Selections";
 import { IAppMixin } from "../../index.doc";
-import { ScalarTableObject } from "../../util/Engine";
+import { Engine, ScalarTableObject } from "../Engine";
 import { DataTestsBase } from "./BaseClass";
 
 export class Scalar extends DataTestsBase {
@@ -19,17 +19,19 @@ export class Scalar extends DataTestsBase {
   selections: Selection;
   private emitter: EventsBus;
   private timing: Timing;
+  private engine: Engine;
   // private state: string;
 
-  constructor(test: TestCase, app: IAppMixin) {
+  constructor(test: TestCase) {
     super();
 
     this.test = test;
-    this.selections = Selection.getInstance({});
+    // this.selections = Selection.getInstance({});
     this.testDetails = test.details as IScalar;
-    this.app = app;
+    // this.app = app;
     this.emitter = new EventsBus();
     this.timing = new Timing();
+    this.engine = Engine.getInstance();
   }
 
   async process(): Promise<ITestDataResult> {

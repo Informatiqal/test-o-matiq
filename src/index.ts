@@ -8,20 +8,20 @@ import {
   ITestMetaResult,
   Runbook,
 } from "./interface/Specs";
-import { Selection, SelectionValidation } from "./modules/Selections";
+import { Selection, SelectionValidation } from "./modules/Engine/Selections";
 import { EventsBus } from "./util/EventBus";
 import { TestSuite } from "./modules/DataTests";
 import { Meta } from "./modules/MetaTests";
-import { Engine } from "./util/Engine";
+import { Engine } from "./modules/Engine";
 
 import { IAppMixin } from "./interface/Mixin";
 
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
 import * as schema from "./schema/schema.json" assert { type: "json" };
-import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
-import { docMixin } from "enigma-mixin";
-import * as enigma from "enigma.js";
-import WebSocket from "ws";
+// import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
+// import { docMixin } from "enigma-mixin";
+// import * as enigma from "enigma.js";
+// import WebSocket from "ws";
 
 export class TestOMatiq {
   specs: Runbook;
@@ -29,7 +29,7 @@ export class TestOMatiq {
   testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
   // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[];
   qlikApps: { [k: string]: App };
-  private engine: { [key: string]: Engine } = {};
+  private engine: Engine;
   private selections: { [key: string]: Selection } = {};
   // private mainApp: { name: string; app: IAppMixin; isMain: boolean };
   private mainApp: string;
@@ -45,6 +45,8 @@ export class TestOMatiq {
     // this.qlikApps = qlikApps;
     this.emitter = new EventsBus();
     this.testResults = {};
+
+    this.engine = Engine.getInstance(this.getMainApp());
 
     // if (validateSchema != undefined) validateSchema = validateSchema || true;
 
@@ -98,7 +100,8 @@ export class TestOMatiq {
     failedTests: number;
     passedTests: number;
   }> {
-    await this.openApps();
+    await this.engine.openApps(this.specs.environment.apps);
+
     // check if test suites have to be filtered first
     if (options?.testSuites?.length > 0)
       this.specs.spec.data = Object.fromEntries(
@@ -140,10 +143,7 @@ export class TestOMatiq {
   }
 
   private async runMetaTests() {
-    const meta = new Meta(
-      this.specs.spec.meta || undefined,
-      this.engine[this.mainApp].qApp
-    );
+    const meta = new Meta(this.specs.spec.meta || undefined);
     const metaResult = await meta.run();
 
     // this.emitter.emit("group:result", metaResult);
@@ -155,8 +155,8 @@ export class TestOMatiq {
       this.specs.spec.data
     )) {
       const testSuite = new TestSuite(
-        testSuiteDefinition,
-        this.engine[this.mainApp].qApp
+        testSuiteDefinition
+        // this.engine[this.mainApp].qApp
       );
 
       const testResults = await testSuite.performTests();
@@ -333,16 +333,17 @@ export class TestOMatiq {
    * Create the specified session variables (if any)
    */
   private async createSessionVariables() {
+    // TODO: group the variables by app to speed the variable creation
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables
     )) {
       // assume the main qlik app
-      let qlikApp = this.engine[this.mainApp].qApp;
+      let qlikApp = this.engine.enigmaData[this.engine.mainApp].app;
 
       // if specific app is defined then create the
       // variable there
       if (varDefinition["app"]) {
-        qlikApp = this.engine[varDefinition["app"]].qApp;
+        qlikApp = this.engine.enigmaData[varDefinition["app"]].app;
       }
 
       await qlikApp.createSessionVariable({
@@ -369,55 +370,22 @@ export class TestOMatiq {
     //   });
   }
 
-  /**
-   * Open all apps specified in the environment.apps section
-   * If any of the apps fails (for some reason) then fail everything and dont continue
-   */
-  private async openApps() {
-    const _this = this;
+  private getMainApp(): string {
+    // TODO: extend the checks more?
+    if (
+      !this.specs.environment.mainApp &&
+      Object.keys(this.specs.environment.apps).length > 1
+    )
+      throw new Error("Please specify which is the main app");
 
-    const enigmaConfig: enigmaJS.IConfig = {
-      Promise: Promise,
-      schema: enigmaSchema,
-      mixins: docMixin,
-      url: "ws://127.0.0.1:4848/app/engineData",
-      createSocket: (url) => new WebSocket(url),
-    };
+    if (!this.specs.environment.apps[this.specs.environment.mainApp])
+      throw new Error(
+        `Specified main app do not exists in the "environment.apps" section `
+      );
 
-    const selectionsProps = this.specs.props?.selections
-      ? this.propSelectionsToArray()
-      : [];
-
-    await Promise.all(
-      Object.keys(this.specs.environment.apps).map(async (a) => {
-        const enigmaClass = (enigma as any).default as IEnigmaClass;
-        const qlikSession = enigmaClass.create(enigmaConfig);
-        const global: EngineAPI.IGlobal = await qlikSession.open();
-        const doc = (await global.openDoc(
-          _this.specs.environment.apps[a].id
-        )) as IAppMixin;
-
-        this.selections[a] = Selection.getInstance({
-          app: doc,
-        });
-
-        this.selections[a].setPropsSelections(
-          selectionsProps as IPropsSelectionArray[]
-        );
-
-        _this.engine[a] = Engine.getInstance(doc);
-        if (this.specs.environment.apps[a].isMain) this.mainApp = a;
-
-        // get apps alternate states and sets them into the selections class
-        const alternateStates = await doc
-          .getAppLayout()
-          .then((layout) => layout.qStateNames);
-
-        this.selections[a].setAlternateStates(alternateStates);
-      })
-    );
-
-    if (Object.keys(this.engine).length == 1 && !this.mainApp)
-      this.mainApp = Object.keys(this.engine)[0];
+    // if at the end mainApp is set then return it
+    if (this.specs.environment.mainApp) return this.specs.environment.mainApp;
+    // else there is only one app specified so return its key
+    return Object.keys(this.specs.environment.apps)[0];
   }
 }

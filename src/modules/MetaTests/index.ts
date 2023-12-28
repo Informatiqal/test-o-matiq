@@ -9,15 +9,18 @@ import { DataConnections } from "./DataConnections";
 import { MasterDimensions } from "./MasterItems/Dimensions";
 import { MasterMeasures } from "./MasterItems/Measures";
 import { MasterVisualizations } from "./MasterItems/Visualizations";
+import { Engine } from "../Engine";
+import { QlikApp } from "../Engine/QlikApp";
 
 export class Meta {
   meta: IMeta;
   app: IAppMixin;
   private totalTests: number;
 
-  constructor(meta: IMeta, app: IAppMixin) {
+  constructor(meta: IMeta) {
+    const engine = Engine.getInstance();
     this.meta = meta;
-    this.app = app;
+    this.app = engine.enigmaData[engine.mainApp].app;
     this.totalTests = 0;
   }
 

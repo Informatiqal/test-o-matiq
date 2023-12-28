@@ -28,15 +28,15 @@ export class Selection {
     // TODO: write to log the selections actions (if debug)
   }
 
-  public static getInstance(arg: {
-    state?: string;
-    app?: IAppMixin;
-  }): Selection {
-    if (!Selection.instance) {
-      Selection.instance = new Selection(arg.app);
-    }
-    return Selection.instance;
-  }
+  // public static getInstance(arg: {
+  //   state?: string;
+  //   app?: IAppMixin;
+  // }): Selection {
+  //   if (!Selection.instance) {
+  //     Selection.instance = new Selection(arg.app);
+  //   }
+  //   return Selection.instance;
+  // }
 
   public setPropsSelections(propSelections: IPropsSelectionArray[]) {
     this.propSelections = propSelections;

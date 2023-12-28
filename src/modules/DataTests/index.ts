@@ -1,28 +1,33 @@
 import { Scalar } from "./Scalar";
-import { Selection } from "../Selections";
+// import { Selection } from "../Engine/Selections";
 import {
+  ISelection,
   TestCase,
   TestEvaluationResult,
   TestSuiteDefinition,
 } from "../../interface/Specs";
 import { IAppMixin } from "../../index.doc";
 import { List } from "./List";
+import { Engine } from "../Engine";
+import { groupByKey } from "../../util/common";
 
 export class TestSuite {
   testSuite: TestSuiteDefinition;
   testsResults: TestEvaluationResult[];
-  private qlikApp: IAppMixin;
-  private selections: Selection;
+  private engine: Engine;
+  // private qlikApp: IAppMixin;
+  // private selections: Selection;
 
   constructor(
     testSuite: TestSuiteDefinition,
-    qlikApp: IAppMixin
+    // qlikApp: IAppMixin
     // propsSelections: IPropsSelections
   ) {
     this.testSuite = testSuite;
-    this.qlikApp = qlikApp;
-    this.selections = Selection.getInstance({});
+    // this.qlikApp = qlikApp;
+    // this.selections = Selection.getInstance({});
     this.testsResults = [];
+    this.engine = Engine.getInstance();
   }
 
   async performTests(): Promise<TestEvaluationResult[]> {
@@ -32,9 +37,9 @@ export class TestSuite {
       return [];
     }
 
-    // clear all selections (including the locked fields)
+    // clear all selections in all apps (including the locked fields)
     // before perform the test
-    await this.qlikApp.clearAll(true);
+    await this.engine.clearAllInAll();
 
     await this.runTests();
 
@@ -42,10 +47,26 @@ export class TestSuite {
   }
 
   private async applySelections() {
-    if (this.testSuite.selections)
-      return await this.selections.makeSelections(this.testSuite.selections);
+    // if no selections are defined then return empty array
+    // no need to proceed
+    if (!this.testSuite.selections) return [];
 
-    return [];
+    const s = groupByKey<ISelection>(this.testSuite.selections, "app");
+
+    // "move" the selections without specified app under the main app
+    if (s["undefined"]) {
+      s[this.engine.mainApp] = [...s[this.engine.mainApp], ...s["undefined"]];
+      delete s["undefined"];
+    }
+
+    // make all defined selections in the respective apps
+    return await Promise.all(
+      Object.keys(s).map((appName) =>
+        this.engine.enigmaData[appName].selection.makeSelections(s[appName])
+      )
+    );
+
+    // return await this.selections.makeSelections(this.testSuite.selections);
   }
 
   private async runTests() {
@@ -54,7 +75,7 @@ export class TestSuite {
       if (!test.skip) {
         // clear all if clearAllBeforeEach is explicitly set to true
         if (this.testSuite.options?.clearAllBeforeEach == true)
-          await this.qlikApp.clearAll(true);
+          await this.engine.clearAllInAll();
 
         const testResult: TestEvaluationResult = await this.runTest(test);
 
@@ -70,14 +91,14 @@ export class TestSuite {
     const currentSelections = await this.applySelections();
 
     if (test.type == "scalar") {
-      const scalar = new Scalar(test, this.qlikApp);
+      const scalar = new Scalar(test);
       return await scalar.process();
     }
 
-    if (test.type == "list") {
-      const list = new List(test, this.qlikApp);
-      return await list.process();
-    }
+    // if (test.type == "list") {
+    //   const list = new List(test, this.qlikApp);
+    //   return await list.process();
+    // }
 
     // Table will be disabled at the moment https://github.com/Informatiqal/test-o-matiq/issues/145
     // if (test.type == "table") {

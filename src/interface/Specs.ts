@@ -359,21 +359,25 @@ export interface App {
    *
    * If only one app is defined then this property might not be set (it will be set by default)
    */
-  isMain?: boolean;
+  // isMain?: boolean;
   // app: IAppMixin;
 }
+
+export type Apps = { [k: string]: App };
 
 export interface EnvironmentDesktop {
   host: string;
   // apps: App[];
-  apps: { [k: string]: App };
+  apps: Apps;
+  mainApp: string;
   edition: "desktop";
 }
 
 export interface EnvironmentSaaS {
   host: string;
   // apps: Apps[];
-  apps: { [k: string]: App };
+  mainApp: string;
+  apps: Apps;
   edition: "saas";
   authentication?: {
     apiKey: string;

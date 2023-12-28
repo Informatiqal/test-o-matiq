@@ -1,48 +1,134 @@
+import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
+import { docMixin } from "enigma-mixin";
+import * as enigma from "enigma.js";
+import WebSocket from "ws";
 import { IGenericObject } from "enigma-mixin/dist/index.doc";
-import { IAppMixin } from "../interface/Mixin";
+import { IAppMixin } from "../../interface/Mixin";
+import { Apps } from "../../index.doc";
+import { QlikApp } from "./QlikApp";
 
 export class Engine {
   static instance: Engine;
-  qApp: IAppMixin;
+  // qApp: IAppMixin;
+  enigmaData: {
+    // [k: string]: {
+    //   global: EngineAPI.IGlobal;
+    //   session: enigmaJS.ISession;
+    //   app: IAppMixin;
+    // };
+    [k: string]: QlikApp;
+  } = {};
+  mainApp: string;
+  // mainAppName: string;
   scalarTable: ScalarTableObject;
 
-  constructor(qApp: IAppMixin) {
-    this.qApp = qApp;
-    this.scalarTable = new ScalarTableObject(qApp);
+  constructor(mainApp: string) {
+    this.mainApp = mainApp;
+    //TODO: define and use the main app here?
+    // this.qApp = qApp;
+    // this.scalarTable = new ScalarTableObject(qApp);
   }
 
-  public static getInstance(qApp?: IAppMixin): Engine {
+  public static getInstance(mainApp?: string): Engine {
     if (!Engine.instance) {
-      Engine.instance = new Engine(qApp);
+      Engine.instance = new Engine(mainApp);
     }
     return Engine.instance;
   }
 
+  public async openApps(arg: Apps) {
+    // const selectionsProps = this.specs.props?.selections
+    //   ? this.propSelectionsToArray()
+    //   : [];
+
+    let b = await Promise.all(
+      Object.entries(arg).map(([key, data]) => {
+        const enigmaConfig: enigmaJS.IConfig = {
+          Promise: Promise,
+          schema: enigmaSchema,
+          mixins: docMixin,
+          url: `ws://127.0.0.1:4848/app/engineData/identity/${+new Date()}`,
+          createSocket: (url) => new WebSocket(url),
+        };
+
+        // const enigmaClass = (enigma as any).default as IEnigmaClass;
+        // const qlikSession = enigmaClass.create(enigmaConfig);
+        // const global: EngineAPI.IGlobal = await qlikSession.open();
+        // const doc: IAppMixin = await global.openDoc(arg[a].id);
+        const app = new QlikApp(enigmaConfig, data.id);
+        // return app;
+        return app
+          .open()
+          .then(() => {
+            this.enigmaData[key] = app;
+          })
+          .catch((e) => {
+            let a = 1;
+          });
+
+        // this.selections[a] = Selection.getInstance({
+        //   app: doc,
+        // });
+
+        // this.selections[a].setPropsSelections(
+        //   selectionsProps as IPropsSelectionArray[]
+        // );
+
+        // this.enigmaData[a] = {
+        //   global,
+        //   session: qlikSession,
+        //   app: doc,
+        // };
+        // _this.engine[a] = Engine.getInstance(doc);
+        // if (this.specs.environment.apps[a].isMain) this.mainApp = a;
+
+        // get apps alternate states and sets them into the selections class
+        // const alternateStates = await doc
+        //   .getAppLayout()
+        //   .then((layout) => layout.qStateNames);
+
+        // this.selections[a].setAlternateStates(alternateStates);
+      })
+    );
+    let a = 1;
+  }
+
   async checkExpression(expression: string) {
-    const { qErrorMsg, qBadFieldNames, qDangerousFieldNames } =
-      await this.qApp.checkExpression(expression);
+    // const { qErrorMsg, qBadFieldNames, qDangerousFieldNames } =
+    //   await this.qApp.checkExpression(expression);
 
-    if (qErrorMsg) throw new Error(qErrorMsg);
+    // if (qErrorMsg) throw new Error(qErrorMsg);
 
-    if (qBadFieldNames.length > 0) {
-      const badFieldNames = qBadFieldNames.map(({ qFrom, qCount }) =>
-        expression.substring(qFrom, qFrom + qCount)
-      );
+    // if (qBadFieldNames.length > 0) {
+    //   const badFieldNames = qBadFieldNames.map(({ qFrom, qCount }) =>
+    //     expression.substring(qFrom, qFrom + qCount)
+    //   );
 
-      throw new Error(`Bad field name(s): ${badFieldNames.join(", ")}`);
-    }
+    //   throw new Error(`Bad field name(s): ${badFieldNames.join(", ")}`);
+    // }
 
-    if (qDangerousFieldNames.length > 0) {
-      const dangerousFieldNames = qDangerousFieldNames.map(
-        ({ qFrom, qCount }) => expression.substring(qFrom, qFrom + qCount)
-      );
+    // if (qDangerousFieldNames.length > 0) {
+    //   const dangerousFieldNames = qDangerousFieldNames.map(
+    //     ({ qFrom, qCount }) => expression.substring(qFrom, qFrom + qCount)
+    //   );
 
-      throw new Error(
-        `Dangerous field name(s): ${dangerousFieldNames.join(", ")}`
-      );
-    }
+    //   throw new Error(
+    //     `Dangerous field name(s): ${dangerousFieldNames.join(", ")}`
+    //   );
+    // }
 
     return;
+  }
+
+  /**
+   * call clearAll method in all defined apps
+   */
+  async clearAllInAll() {
+    await Promise.all(
+      Object.keys(this.enigmaData).map((d) => {
+        this.enigmaData[d].app.clearAll(true);
+      })
+    );
   }
 }
 

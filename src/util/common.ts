@@ -124,3 +124,13 @@ export const parseNum = (str: string) => +str.replace(/[^.\d]/g, "");
 
 // check if given number is in range
 export const inRange = (num, min, max) => num >= min && num <= max;
+
+export function groupByKey<T>(list: T[], key): { [k: string]: T[] } {
+  return list.reduce(
+    (hash, obj) => ({
+      ...hash,
+      [obj[key]]: (hash[obj[key]] || []).concat(obj),
+    }),
+    {}
+  );
+}

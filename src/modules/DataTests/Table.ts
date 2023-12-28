@@ -6,8 +6,8 @@ import {
 } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
-import { Selection } from "../Selections";
-import { TableObject } from "../../util/Engine";
+import { Selection } from "../Engine/Selections";
+import { TableObject } from "../Engine";
 
 export class Table {
   private app: EngineAPI.IApp;

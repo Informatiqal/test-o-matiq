@@ -2,7 +2,7 @@ import { IAppMixin } from "../../interface/Mixin";
 import { EventsBus } from "../../util/EventBus";
 import { IList, ITestDataResult, TestCase } from "../../interface/Specs";
 import { Timing, concatResults } from "../../util/common";
-import { Selection } from "../../modules/Selections";
+import { Selection } from "../Engine/Selections";
 import { DataTestsBase } from "./BaseClass";
 
 export class List extends DataTestsBase {

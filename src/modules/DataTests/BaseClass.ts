@@ -1,5 +1,5 @@
 import { TestCase, TestEvaluationResult } from "../../interface/Specs";
-import { Selection } from "../Selections";
+import { Selection } from "../Engine/Selections";
 
 export abstract class DataTestsBase {
   abstract test: TestCase;
