@@ -149,6 +149,7 @@ export interface IScalar {
      * - etc
      */
     variation?: string;
+    app?: string;
   }[];
   // result?: string | number;
   /**

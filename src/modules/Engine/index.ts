@@ -4,7 +4,7 @@ import * as enigma from "enigma.js";
 import WebSocket from "ws";
 import { IGenericObject } from "enigma-mixin/dist/index.doc";
 import { IAppMixin } from "../../interface/Mixin";
-import { Apps } from "../../index.doc";
+import { Apps, qSelections } from "../../index.doc";
 import { QlikApp } from "./QlikApp";
 
 export class Engine {
@@ -36,7 +36,7 @@ export class Engine {
     return Engine.instance;
   }
 
-  public async openApps(arg: Apps) {
+  public async openApps(arg: Apps, selectionsProps: any) {
     // const selectionsProps = this.specs.props?.selections
     //   ? this.propSelectionsToArray()
     //   : [];
@@ -56,11 +56,22 @@ export class Engine {
         // const global: EngineAPI.IGlobal = await qlikSession.open();
         // const doc: IAppMixin = await global.openDoc(arg[a].id);
         const app = new QlikApp(enigmaConfig, data.id);
+        // get apps alternate states and sets them into the selections class
+        // const alternateStates = await app
+        //   .getAppLayout()
+        //   .then((layout) => layout.qStateNames);
         // return app;
+
         return app
           .open()
           .then(() => {
             this.enigmaData[key] = app;
+
+            return app.app.getAppLayout();
+          })
+          .then((appLayout) => {
+            app.selection.setAlternateStates(appLayout.qStateNames);
+            app.selection.setPropsSelections(selectionsProps);
           })
           .catch((e) => {
             let a = 1;
@@ -81,11 +92,6 @@ export class Engine {
         // };
         // _this.engine[a] = Engine.getInstance(doc);
         // if (this.specs.environment.apps[a].isMain) this.mainApp = a;
-
-        // get apps alternate states and sets them into the selections class
-        // const alternateStates = await doc
-        //   .getAppLayout()
-        //   .then((layout) => layout.qStateNames);
 
         // this.selections[a].setAlternateStates(alternateStates);
       })
@@ -130,13 +136,29 @@ export class Engine {
       })
     );
   }
+
+  async getAllCurrentSelections() {
+    const sel = await Promise.all(
+      Object.entries(this.enigmaData).map(async ([key, data]) => {
+        const selections = await data.selection.getCurrentSelections();
+
+        return { app: key, ...selections };
+      })
+    );
+
+    return sel.flat() as {
+      app: string;
+      state: string;
+      selections: qSelections[];
+    }[];
+  }
 }
 
 export class ScalarTableObject {
-  private qApp: IAppMixin;
+  private qApp: QlikApp;
   private qObj: IGenericObject;
 
-  constructor(qApp: IAppMixin) {
+  constructor(qApp: QlikApp) {
     this.qApp = qApp;
   }
 
@@ -194,11 +216,11 @@ export class ScalarTableObject {
       },
     } as EngineAPI.IGenericObjectProperties;
 
-    return await this.qApp.createSessionObject(qObjProps);
+    return await this.qApp.app.createSessionObject(qObjProps);
   }
 
   async destroy() {
-    return this.qApp.destroySessionObject(this.qObj.id);
+    return this.qApp.app.destroySessionObject(this.qObj.id);
   }
 }
 

@@ -55,7 +55,7 @@ export class TestSuite {
 
     // "move" the selections without specified app under the main app
     if (s["undefined"]) {
-      s[this.engine.mainApp] = [...s[this.engine.mainApp], ...s["undefined"]];
+      s[this.engine.mainApp] = [...(s[this.engine.mainApp] || []), ...s["undefined"]];
       delete s["undefined"];
     }
 
