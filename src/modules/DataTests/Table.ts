@@ -22,7 +22,7 @@ export class Table {
     this.table = test.details as ITableTestCase;
     this.app = app;
     this.emitter = new EventsBus();
-    this.selections = Selection.getInstance({});
+    // this.selections = Selection.getInstance({});
 
     this.timing = new Timing();
   }

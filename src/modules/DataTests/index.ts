@@ -19,7 +19,7 @@ export class TestSuite {
   // private selections: Selection;
 
   constructor(
-    testSuite: TestSuiteDefinition,
+    testSuite: TestSuiteDefinition
     // qlikApp: IAppMixin
     // propsSelections: IPropsSelections
   ) {
@@ -55,7 +55,10 @@ export class TestSuite {
 
     // "move" the selections without specified app under the main app
     if (s["undefined"]) {
-      s[this.engine.mainApp] = [...(s[this.engine.mainApp] || []), ...s["undefined"]];
+      s[this.engine.mainApp] = [
+        ...(s[this.engine.mainApp] || []),
+        ...s["undefined"],
+      ];
       delete s["undefined"];
     }
 
@@ -95,10 +98,10 @@ export class TestSuite {
       return await scalar.process();
     }
 
-    // if (test.type == "list") {
-    //   const list = new List(test, this.qlikApp);
-    //   return await list.process();
-    // }
+    if (test.type == "list") {
+      const list = new List(test);
+      return await list.process();
+    }
 
     // Table will be disabled at the moment https://github.com/Informatiqal/test-o-matiq/issues/145
     // if (test.type == "table") {
