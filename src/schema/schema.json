@@ -51,7 +51,10 @@
         "host": {
           "type": "string"
         },
-        "appId": {
+        "apps": {
+          "$ref": "#/definitions/Apps"
+        },
+        "mainApp": {
           "type": "string"
         },
         "edition": {
@@ -61,8 +64,28 @@
       },
       "required": [
         "host",
-        "appId",
+        "apps",
+        "mainApp",
         "edition"
+      ],
+      "additionalProperties": false
+    },
+    "Apps": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/App"
+      }
+    },
+    "App": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The real app id"
+        }
+      },
+      "required": [
+        "id"
       ],
       "additionalProperties": false
     },
@@ -72,8 +95,11 @@
         "host": {
           "type": "string"
         },
-        "appId": {
+        "mainApp": {
           "type": "string"
+        },
+        "apps": {
+          "$ref": "#/definitions/Apps"
         },
         "edition": {
           "type": "string",
@@ -94,7 +120,8 @@
       },
       "required": [
         "host",
-        "appId",
+        "mainApp",
+        "apps",
         "edition"
       ],
       "additionalProperties": false
@@ -335,6 +362,10 @@
               "type": "boolean",
               "description": "Clear all selections (perform `clearAll()`)"
             },
+            "app": {
+              "type": "string",
+              "description": "In which app the selection should be made"
+            },
             "state": {
               "not": {}
             },
@@ -376,6 +407,10 @@
             "state": {
               "type": "string"
             },
+            "app": {
+              "type": "string",
+              "description": "In which app the selection should be made"
+            },
             "clearAll": {
               "not": {}
             },
@@ -398,6 +433,10 @@
             "bookmark": {
               "type": "string",
               "description": "NAME of the bookmark to be applied"
+            },
+            "app": {
+              "type": "string",
+              "description": "In which app the selection should be made"
             },
             "state": {
               "not": {}
@@ -432,6 +471,10 @@
             },
             "state": {
               "type": "string"
+            },
+            "app": {
+              "type": "string",
+              "description": "In which app the selection should be made"
             },
             "bookmark": {
               "not": {}
@@ -539,6 +582,13 @@
               },
               "operator": {
                 "$ref": "#/definitions/IScalarOperator"
+              },
+              "variation": {
+                "type": "string",
+                "description": "What is the accepted variation between the expression and the result. For example:\n\n- +-5\n- +-0.5%\n- 12 (will assume +12)\n- -3\n- etc"
+              },
+              "app": {
+                "type": "string"
               }
             },
             "required": [
@@ -725,7 +775,27 @@
     "IPropsVariables": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              },
+              "app": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression",
+              "app"
+            ],
+            "additionalProperties": false
+          }
+        ]
       }
     }
   }
