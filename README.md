@@ -18,6 +18,8 @@ Data testing (especially regression testing) is usually boring and time consumin
 
 `Test-O-Matiq` is designed to be ran against Qlik Sense app. The package will execute user defined set of tests. The tests are split in few main areas:
 
+(needs updating)
+
 - Meta - test the overall status of an app
     - Data model
         - Fields - list of fields to be present in the app
@@ -30,9 +32,9 @@ Data testing (especially regression testing) is usually boring and time consumin
     - Variables
         - Exists - variables to exists in the app
         - DoNotExists - variables to not exists in the app
-- Data - list of test cases. Each test case have two main sections:
-    - Selections (optional) - this sections contains set of selections to be made before the tests are ran
-    - Tests - the actual tests to be performed. **Tests are ran in "order of appearance"**. Three (for now) type of tests can be defined:
+    - Data - list of test cases. Each test case have two main sections:
+        - Selections (optional) - this sections contains set of selections to be made before the tests are ran
+        - Tests - the actual tests to be performed. **Tests are ran in "order of appearance"**. Three (for now) type of tests can be defined:
         - Scalar - result of "one line" expressions is compared with user defined expected result. Any Qlik expression can be specified here (ones including variables, master items, alternate states etc.). Think of this type as a "textbox" validation.
         - List - check for specific values presence in fields
         - Table - (TBA) build data table from user defined dimensions and expressions and compare the result with the expected values
@@ -52,7 +54,7 @@ npm install --save test-o-matiq
 ## Usage
 
 ```javascript
-// NodeJS (pseudo) example
+// NodeJS (pseudo) example (not final. needs updating!)
 import { TestOMatiq } from "test-o-matiq";
 
 import { docMixin } from "enigma-mixin";
@@ -90,13 +92,15 @@ const result = await testOMatiq.run();
 `result` variable will have the following data:
 ![result](./assets//result.png)
 
-## More examples will be available soon in the Wiki section
+## More examples will be available soon
 
 ## Solutions
 
 - [Test-O-Matiq CLI](https://github.com/Informatiqal/test-o-matiq-cli) - command line tool that runs test suites, from YAML files
 - Test-O-Matiq Web - TBA
 
-## Code documentation
+## Documentation
 
-[Dev documentation](https://informatiqal.github.io/test-o-matiq/classes/TestOMatiq.html)
+- [User documentation](https://docs.informatiqal.com/test-o-matiq/)
+
+- [Dev documentation](https://informatiqal.github.io/test-o-matiq/classes/TestOMatiq.html)

@@ -6,8 +6,8 @@ import {
 } from "../../interface/Specs";
 import { EventsBus } from "../../util/EventBus";
 import { Timing } from "../../util/common";
-import { Selection } from "../Selections";
-import { TableObject } from "../../util/Engine";
+import { Selection } from "../Engine/Selections";
+import { TableObject } from "../Engine";
 
 export class Table {
   private app: EngineAPI.IApp;
@@ -22,7 +22,7 @@ export class Table {
     this.table = test.details as ITableTestCase;
     this.app = app;
     this.emitter = new EventsBus();
-    this.selections = Selection.getInstance({});
+    // this.selections = Selection.getInstance({});
 
     this.timing = new Timing();
   }

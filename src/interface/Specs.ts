@@ -1,3 +1,5 @@
+import { IAppMixin } from "./Mixin";
+
 /** @hidden  */
 type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> &
   U[keyof U];
@@ -147,6 +149,7 @@ export interface IScalar {
      * - etc
      */
     variation?: string;
+    app?: string;
   }[];
   // result?: string | number;
   /**
@@ -188,6 +191,10 @@ export type ISelection =
        * Clear all selections (perform `clearAll()`)
        */
       clearAll: boolean;
+      /**
+       * In which app the selection should be made
+       */
+      app?: string;
       state?: undefined;
       field?: undefined;
       values?: undefined;
@@ -211,6 +218,10 @@ export type ISelection =
        */
       values: (string | number)[];
       state?: string;
+      /**
+       * In which app the selection should be made
+       */
+      app?: string;
       clearAll?: undefined;
       bookmark?: undefined;
       byName?: undefined;
@@ -220,6 +231,10 @@ export type ISelection =
        * NAME of the bookmark to be applied
        */
       bookmark: string;
+      /**
+       * In which app the selection should be made
+       */
+      app?: string;
       state?: undefined;
       clearAll?: undefined;
       field?: undefined;
@@ -232,6 +247,10 @@ export type ISelection =
        */
       byName: string[];
       state?: string;
+      /**
+       * In which app the selection should be made
+       */
+      app?: string;
       bookmark?: undefined;
       clearAll?: undefined;
       field?: undefined;
@@ -325,15 +344,41 @@ export interface Spec {
 //   XL = "eXcluded Locked",
 // }
 
+export interface App {
+  /**
+   * Might not be the app real name.
+   * This name will be used in the tests to reference the app
+   */
+  // name: string;
+  /**
+   * The real app id
+   */
+  id: string;
+  /**
+   * Only one app should have this property as true
+   * If not app is referenced in the tests then this app will be the default one
+   *
+   * If only one app is defined then this property might not be set (it will be set by default)
+   */
+  // isMain?: boolean;
+  // app: IAppMixin;
+}
+
+export type Apps = { [k: string]: App };
+
 export interface EnvironmentDesktop {
   host: string;
-  appId: string;
+  // apps: App[];
+  apps: Apps;
+  mainApp: string;
   edition: "desktop";
 }
 
 export interface EnvironmentSaaS {
   host: string;
-  appId: string;
+  // apps: Apps[];
+  mainApp: string;
+  apps: Apps;
   edition: "saas";
   authentication?: {
     apiKey: string;
@@ -433,7 +478,7 @@ export interface IProps {
 }
 
 export type IPropsVariables = {
-  [k: string]: string;
+  [k: string]: string | { expression: string; app: string };
 };
 
 export type IPropsSelections = {

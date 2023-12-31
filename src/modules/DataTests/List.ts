@@ -2,26 +2,29 @@ import { IAppMixin } from "../../interface/Mixin";
 import { EventsBus } from "../../util/EventBus";
 import { IList, ITestDataResult, TestCase } from "../../interface/Specs";
 import { Timing, concatResults } from "../../util/common";
-import { Selection } from "../../modules/Selections";
+import { Selection } from "../Engine/Selections";
 import { DataTestsBase } from "./BaseClass";
+import { Engine } from "../Engine";
 
 export class List extends DataTestsBase {
-  private app: IAppMixin;
-  test: TestCase;
+  // private app: IAppMixin;
   private testDetails: IList;
-  private emitter: EventsBus;
+  test: TestCase;
   selections: Selection;
+  private emitter: EventsBus;
   private timing: Timing;
+  engine: Engine;
 
-  constructor(test: TestCase, app: IAppMixin) {
+  constructor(test: TestCase) {
     super();
 
     this.test = test;
-    this.selections = Selection.getInstance({});
+    // this.selections = Selection.getInstance({});
     this.testDetails = test.details as IList;
-    this.app = app;
+    // this.app = app;
     this.emitter = new EventsBus();
     this.timing = new Timing();
+    this.engine = Engine.getInstance();
   }
 
   async process(): Promise<ITestDataResult> {
@@ -31,7 +34,7 @@ export class List extends DataTestsBase {
     // apply the required selections
     const currentSelections = await this.applySelections();
 
-    const listValues = await this.app
+    const listValues = await this.engine[this.engine.mainApp]
       .mCreateSessionListbox(this.testDetails.fieldName, {
         destroyOnComplete: true,
         getAllData: true,
@@ -80,7 +83,7 @@ export class List extends DataTestsBase {
     const result: ITestDataResult = {
       name: this.test.name,
       status: testStatus,
-      type: "scalar",
+      type: "list",
       timings: {
         start: this.timing.startTime,
         end: this.timing.endTime,

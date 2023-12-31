@@ -1,54 +1,55 @@
 import Ajv from "ajv";
 import {
+  App,
   IPropsSelectionArray,
   IScalar,
   ISelection,
   ITestDataResult,
   ITestMetaResult,
   Runbook,
-  TestSuiteResult,
+  TestCase,
 } from "./interface/Specs";
-import { Selection, SelectionValidation } from "./modules/Selections";
+import { Selection, SelectionValidation } from "./modules/Engine/Selections";
 import { EventsBus } from "./util/EventBus";
 import { TestSuite } from "./modules/DataTests";
 import { Meta } from "./modules/MetaTests";
-import { Engine } from "./util/Engine";
+import { Engine } from "./modules/Engine";
 
 import { IAppMixin } from "./interface/Mixin";
-import * as schema from "./schema/schema.json" assert { type: "json" };
 
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
+import * as schema from "./schema/schema.json" assert { type: "json" };
+// import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
+// import { docMixin } from "enigma-mixin";
+// import * as enigma from "enigma.js";
+// import WebSocket from "ws";
 
 export class TestOMatiq {
   specs: Runbook;
   emitter: EventsBus;
   testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
-  qlikApp: IAppMixin;
-  engine: Engine;
-  private selections: Selection;
+  // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[];
+  qlikApps: { [k: string]: App };
+  private engine: Engine;
+  private selections: { [key: string]: Selection } = {};
+  // private mainApp: { name: string; app: IAppMixin; isMain: boolean };
+  private mainApp: string;
 
-  constructor(specs: Runbook, qlikApp: IAppMixin, validateSchema?: boolean) {
+  constructor(
+    specs: Runbook,
+    // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[],
+    // qlikApps: { [k: string]: App },
+    validateSchema?: boolean
+  ) {
     this.specs = specs;
-    this.qlikApp = qlikApp;
+    // this.qlikApps = qlikApps;
+    // this.qlikApps = qlikApps;
     this.emitter = new EventsBus();
     this.testResults = {};
-    validateSchema = validateSchema == undefined ? true : validateSchema;
 
-    const selectionsProps = this.specs.props?.selections
-      ? this.propSelectionsToArray()
-      : [];
-    // setup the selections class
-    this.selections = Selection.getInstance({ app: this.qlikApp });
-    this.selections.setPropsSelections(
-      selectionsProps as IPropsSelectionArray[]
-    );
-    // selections.setDebug(this.specs.debug ? this.specs.debug : false);
+    this.engine = Engine.getInstance(this.getMainApp());
 
-    this.engine = Engine.getInstance(this.qlikApp);
-
-    // this.testGroups = Object.entries(specs.spec).map((value) =>
-    //   value[0].toString()
-    // );
+    // if (validateSchema != undefined) validateSchema = validateSchema || true;
 
     // validate the schema by default but have the option to suppress it as well
     if (validateSchema) {
@@ -76,6 +77,12 @@ export class TestOMatiq {
     failedTests: number;
     passedTests: number;
   }> {
+    const selectionsProps = this.specs.props?.selections
+      ? this.propSelectionsToArray()
+      : [];
+
+    await this.engine.openApps(this.specs.environment.apps, selectionsProps);
+
     // check if test suites have to be filtered first
     if (options?.testSuites?.length > 0)
       this.specs.spec.data = Object.fromEntries(
@@ -89,19 +96,23 @@ export class TestOMatiq {
 
     // if (!this.specs.spec.meta && !this.specs.spec.data) return {};
 
-    // get apps alternate states and sets them into the selections class
-    const alternateStates = await this.qlikApp
-      .getAppLayout()
-      .then((layout) => layout.qStateNames);
-    this.selections.setAlternateStates(alternateStates);
-
     await this.validateExpressions();
-    if (this.specs.props?.selections) await this.validateSelections();
+    // if (this.specs.props?.selections) await this.validateSelections();
     // this.validateTaskOperatorResult();
 
     if (this.specs.props?.variables) await this.createSessionVariables();
     if (this.specs.spec?.meta) await this.runMetaTests();
     if (this.specs.spec?.data) await this.runDataTests();
+
+    // TODO: close all sessions on any exit as well!
+    // try and close all the sessions before exit
+    try {
+      await Promise.all(
+        Object.entries(this.engine.enigmaData).map(([key, data]) => {
+          data.session.close();
+        })
+      );
+    } catch (e) {}
 
     let failedTests = 0;
     let passedTests = 0;
@@ -123,7 +134,7 @@ export class TestOMatiq {
   }
 
   private async runMetaTests() {
-    const meta = new Meta(this.specs.spec.meta || undefined, this.qlikApp);
+    const meta = new Meta(this.specs.spec.meta || undefined);
     const metaResult = await meta.run();
 
     // this.emitter.emit("group:result", metaResult);
@@ -134,7 +145,10 @@ export class TestOMatiq {
     for (let [testSuiteName, testSuiteDefinition] of Object.entries(
       this.specs.spec.data
     )) {
-      const testSuite = new TestSuite(testSuiteDefinition, this.qlikApp);
+      const testSuite = new TestSuite(
+        testSuiteDefinition
+        // this.engine[this.mainApp].qApp
+      );
 
       const testResults = await testSuite.performTests();
 
@@ -170,7 +184,8 @@ export class TestOMatiq {
     const selectionValidation = new SelectionValidation(
       [...selectionsProps, ...testsSelections] as ISelection[],
       this.specs.props,
-      this.qlikApp
+      // TODO: only the main app?
+      this.engine[this.mainApp].qApp
     );
 
     const {
@@ -222,72 +237,133 @@ export class TestOMatiq {
     const _this = this;
     let failedValidations = [];
 
-    // validate all session variables
-    if (this.specs.props?.variables) {
-      await Promise.all(
-        Object.entries(this.specs.props.variables).map(
-          ([varName, varDefinition]) => {
-            return _this.engine
-              .checkExpression(varDefinition)
-              .then((v) => null)
-              .catch(
-                (e) =>
-                  `Session variable "${varName}" validation failed -> ${e.message}`
-              );
-          }
-        )
-      )
-        .then((validations) => validations.filter((v) => v != null))
-        .then((validations) => {
-          failedValidations.push(...validations);
-        });
-    }
+    const variablesValidationResult = await this.validateVariables();
+    failedValidations.push(...variablesValidationResult);
 
     // get all possible tests
     const availableTests = Object.entries(this.specs.spec.data)
       .map(([_, tsDef]) => tsDef.tests)
       .flat();
 
-    await Promise.all(
-      availableTests.map((test) => {
-        // TODO: validate the possible expressions in the result property
-        // validate scalar tests
-        if (test.type == "scalar") {
-          return _this.engine
-            .checkExpression((test.details as IScalar).expression)
-            .then((v) => null)
-            .catch(
-              (e) =>
-                `Test "${test.name}" expression validation failed -> ${e.message}`
-            );
-        }
+    const scalarTests = availableTests.filter((t) => t.type == "scalar");
+    const scalarValidationResult = await this.validateScalarExpressions(
+      scalarTests
+    );
+    failedValidations.push(...scalarValidationResult);
 
-        // TODO: to validate the possible calculated dimensions
-        // validate tables measures expressions
-        // if (test.type == "table") {
-        //   return Promise.all(
-        //     (test.details as ITableTestCase).measures.map((m) => {
-        //       return _this.engine
-        //         .checkExpression(m)
-        //         .then((v) => null)
-        //         .catch(
-        //           (e) =>
-        //             `Test "${test.name}" measure validation failed -> ${e.message}`
-        //         );
-        //     })
-        //   ).then((validations) => validations.flat().filter((v) => v != null));
-        // }
-      })
-    )
-      .then((validations) => validations.flat().filter((v) => v != null))
-      .then((validations) => {
-        failedValidations.push(...validations);
-      });
+    failedValidations = failedValidations.flat();
 
     if (failedValidations.length > 0)
       throw new Error(
         `Failed expression validations:\n${failedValidations.join("\n")}`
       );
+  }
+
+  /**
+   * Validate if the expressions specified in the variables
+   * are valid expressions (syntax, fields, functions etc)
+   */
+  private async validateVariables() {
+    if (!this.specs.props?.variables) return [];
+    const _this = this;
+
+    return await Promise.all(
+      Object.entries(this.specs.props.variables).map(
+        ([varName, varDefinition]) => {
+          const varApp: string = varDefinition["app"]
+            ? varDefinition["app"]
+            : _this.engine.mainApp;
+
+          return _this.engine.enigmaData[varApp].app
+            .checkExpression(
+              varDefinition["expression"]
+                ? varDefinition["expression"]
+                : varDefinition
+            )
+            .then((v) => null)
+            .catch(
+              (e) =>
+                `Session variable "${varName}" validation failed in app "${varApp}" -> ${e.message}`
+            );
+        }
+      )
+    ).then((validations) => validations.filter((v) => v != null));
+  }
+
+  private async validateScalarExpressions(scalarTests: TestCase[]) {
+    if (scalarTests.length == 0) return [];
+    const _this = this;
+
+    let expressions: { value: string; app: string; testName: string }[][] =
+      scalarTests.map((test) => {
+        const exp = [];
+        exp.push({
+          value: test.details["expression"],
+          app: _this.engine.mainApp,
+          testName: test.name,
+        });
+
+        (test.details as IScalar).results.map((result) => {
+          if (result.value.toString().startsWith("=")) {
+            exp.push({
+              value: result.value,
+              app: result.app || _this.engine.mainApp,
+              testName: test.name,
+            });
+          }
+        });
+
+        return exp;
+      });
+
+    return await Promise.all(
+      expressions.flat().map((expression) => {
+        return _this.engine.enigmaData[expression.app].app
+          .checkExpression(expression.value)
+          .then((v) => {
+            if (v.qErrorMsg.length > 0)
+              return `Test "${expression.testName}" expression validation failed in app "${expression.app}" -> ${v.qErrorMsg}`;
+
+            if (v.qBadFieldNames.length > 0)
+              return `Test "${
+                expression.testName
+              }" found bad field names in app "${
+                expression.app
+              }" -> ${v.qBadFieldNames.join(", ")}`;
+
+            if (v.qDangerousFieldNames.length > 0)
+              return `Test "${
+                expression.testName
+              }" found dangerous field names in app "${
+                expression.app
+              }" -> ${v.qDangerousFieldNames.join(", ")}`;
+
+            return null;
+          })
+          .catch(
+            (e) =>
+              `Test "${expression.testName}" expression validation failed in app "${expression.app}" -> ${e.message}`
+          );
+      })
+    ).then((validations) => validations.flat().filter((v) => v != null));
+  }
+
+  private async validateTable() {
+    // TODO: to validate the possible calculated dimensions
+    // validate tables measures expressions
+    // if (test.type == "table") {
+    //   return Promise.all(
+    //     (test.details as ITableTestCase).measures.map((m) => {
+    //       return _this.engine
+    //         .checkExpression(m)
+    //         .then((v) => null)
+    //         .catch(
+    //           (e) =>
+    //             `Test "${test.name}" measure validation failed -> ${e.message}`
+    //         );
+    //     })
+    //   ).then((validations) => validations.flat().filter((v) => v != null));
+    // }
   }
 
   private propSelectionsToArray() {
@@ -303,12 +379,24 @@ export class TestOMatiq {
    * Create the specified session variables (if any)
    */
   private async createSessionVariables() {
+    // TODO: group the variables by app to speed the variable creation
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables
     )) {
-      await this.qlikApp.createSessionVariable({
+      // assume the main qlik app
+      let qlikApp = this.engine.enigmaData[this.engine.mainApp].app;
+
+      // if specific app is defined then create the
+      // variable there
+      if (varDefinition["app"]) {
+        qlikApp = this.engine.enigmaData[varDefinition["app"]].app;
+      }
+
+      await qlikApp.createSessionVariable({
         qName: varName,
-        qDefinition: varDefinition,
+        qDefinition: varDefinition["expression"]
+          ? varDefinition["expression"]
+          : varDefinition,
         qIncludeInBookmark: false,
         qInfo: {
           qType: "test-o-matiq-variable",
@@ -326,5 +414,24 @@ export class TestOMatiq {
     //   .map((t) => {
     //     const details = t.details as IScalar;
     //   });
+  }
+
+  private getMainApp(): string {
+    // TODO: extend the checks more?
+    if (
+      !this.specs.environment.mainApp &&
+      Object.keys(this.specs.environment.apps).length > 1
+    )
+      throw new Error("Please specify which is the main app");
+
+    if (!this.specs.environment.apps[this.specs.environment.mainApp])
+      throw new Error(
+        `Specified main app do not exists in the "environment.apps" section `
+      );
+
+    // if at the end mainApp is set then return it
+    if (this.specs.environment.mainApp) return this.specs.environment.mainApp;
+    // else there is only one app specified so return its key
+    return Object.keys(this.specs.environment.apps)[0];
   }
 }
