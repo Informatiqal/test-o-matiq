@@ -1,37 +1,48 @@
-import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
-import { docMixin } from "enigma-mixin";
+import * as enigmaSchema from "enigma.js/schemas/12.1657.0.json" assert { type: "json" };
 import * as enigma from "enigma.js";
+import { docMixin } from "enigma-mixin";
 import WebSocket from "ws";
 import { IGenericObject } from "enigma-mixin/dist/index.doc";
 import { IAppMixin } from "../../interface/Mixin";
-import { Apps, qSelections } from "../../index.doc";
+import {
+  Apps,
+  EnvironmentDesktop,
+  EnvironmentSaaS,
+  qSelections,
+} from "../../index.doc";
 import { QlikApp } from "./QlikApp";
 
 export class Engine {
   static instance: Engine;
-  // qApp: IAppMixin;
   enigmaData: {
-    // [k: string]: {
-    //   global: EngineAPI.IGlobal;
-    //   session: enigmaJS.ISession;
-    //   app: IAppMixin;
-    // };
     [k: string]: QlikApp;
   } = {};
   mainApp: string;
-  // mainAppName: string;
+  environment: EnvironmentDesktop | EnvironmentSaaS;
   scalarTable: ScalarTableObject;
 
-  constructor(mainApp: string) {
+  constructor(
+    mainApp: string,
+    environment: EnvironmentDesktop | EnvironmentSaaS
+  ) {
     this.mainApp = mainApp;
-    //TODO: define and use the main app here?
-    // this.qApp = qApp;
-    // this.scalarTable = new ScalarTableObject(qApp);
+    this.environment = environment;
+
+    if (this.environment.host == "localhost")
+      this.environment.host = "127.0.0.1";
+
+    if (!this.environment.port) {
+      if (this.environment.edition == "saas") this.environment.port = 443;
+      if (this.environment.edition == "desktop") this.environment.port = 4848;
+    }
   }
 
-  public static getInstance(mainApp?: string): Engine {
+  public static getInstance(
+    mainApp?: string,
+    environment?: EnvironmentDesktop | EnvironmentSaaS
+  ): Engine {
     if (!Engine.instance) {
-      Engine.instance = new Engine(mainApp);
+      Engine.instance = new Engine(mainApp, environment);
     }
     return Engine.instance;
   }
@@ -40,6 +51,19 @@ export class Engine {
     // const selectionsProps = this.specs.props?.selections
     //   ? this.propSelectionsToArray()
     //   : [];
+    const headers = (this.environment as EnvironmentSaaS).authentication?.apiKey
+      ? {
+          headers: {
+            authorization: `Bearer ${
+              (this.environment as EnvironmentSaaS).authentication?.apiKey
+            }`,
+          },
+        }
+      : {};
+
+    let protocol = "wss";
+    if (!this.environment.edition) protocol = "wss";
+    if (this.environment.edition == "desktop") protocol = "ws";
 
     let b = await Promise.all(
       Object.entries(arg).map(([key, data]) => {
@@ -47,8 +71,10 @@ export class Engine {
           Promise: Promise,
           schema: enigmaSchema,
           mixins: docMixin,
-          url: `ws://127.0.0.1:4848/app/engineData/identity/${+new Date()}`,
-          createSocket: (url) => new WebSocket(url),
+          url: `${protocol}://${this.environment.host}:${
+            this.environment.port
+          }/app/${data.id}/identity/${+new Date()}`,
+          createSocket: (url) => new WebSocket(url, headers),
         };
 
         // const enigmaClass = (enigma as any).default as IEnigmaClass;
@@ -97,6 +123,52 @@ export class Engine {
       })
     );
     let a = 1;
+  }
+
+  async checkConnection() {
+    const headers = (this.environment as EnvironmentSaaS).authentication?.apiKey
+      ? {
+          headers: {
+            authorization: `Bearer ${
+              (this.environment as EnvironmentSaaS).authentication?.apiKey
+            }`,
+          },
+        }
+      : {};
+
+    let protocol = "wss";
+    if (!this.environment.edition) protocol = "wss";
+    if (this.environment.edition == "desktop") protocol = "ws";
+
+    const enigmaConfig: enigmaJS.IConfig = {
+      Promise: Promise,
+      schema: enigmaSchema,
+      mixins: docMixin,
+      url: `${protocol}://${this.environment.host}:${
+        this.environment.port
+      }/app/${this.environment.apps[this.mainApp].id}/identity/${+new Date()}`,
+      createSocket: (url) => new WebSocket(url, headers),
+    };
+
+    const enigmaClass = (enigma as any).default as IEnigmaClass;
+    const enigmaSession = enigmaClass.create(enigmaConfig);
+
+    try {
+      const enigmaConnection: EngineAPI.IGlobal = await enigmaSession.open();
+
+      const engineVersion = await enigmaConnection
+        .engineVersion()
+        .then((r) => r.qComponentVersion);
+
+      await enigmaSession.close();
+      return engineVersion;
+    } catch (e) {
+      try {
+        await enigmaSession.close();
+      } catch (e) {}
+
+      throw new Error(e.message);
+    }
   }
 
   async checkExpression(expression: string) {

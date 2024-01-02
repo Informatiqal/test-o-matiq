@@ -366,6 +366,7 @@ export type Apps = { [k: string]: App };
 export interface EnvironmentDesktop {
   host: string;
   // apps: App[];
+  port?: number;
   apps: Apps;
   mainApp: string;
   edition: "desktop";
@@ -373,6 +374,7 @@ export interface EnvironmentDesktop {
 
 export interface EnvironmentSaaS {
   host: string;
+  port?: number;
   // apps: Apps[];
   mainApp: string;
   apps: Apps;
@@ -547,3 +549,5 @@ export interface ICurrentSelections extends EngineAPI.IGenericBaseLayout {
     qSelections: qSelections[];
   };
 }
+
+export type EngineVersion = string;

@@ -1,7 +1,6 @@
 import Ajv from "ajv";
 import {
   App,
-  IPropsSelectionArray,
   IScalar,
   ISelection,
   ITestDataResult,
@@ -9,45 +8,29 @@ import {
   Runbook,
   TestCase,
 } from "./interface/Specs";
-import { Selection, SelectionValidation } from "./modules/Engine/Selections";
+import { SelectionValidation } from "./modules/Engine/Selections";
 import { EventsBus } from "./util/EventBus";
 import { TestSuite } from "./modules/DataTests";
 import { Meta } from "./modules/MetaTests";
 import { Engine } from "./modules/Engine";
 
-import { IAppMixin } from "./interface/Mixin";
-
 import draft from "ajv/dist/refs/json-schema-draft-06.json" assert { type: "json" };
 import * as schema from "./schema/schema.json" assert { type: "json" };
-// import * as enigmaSchema from "enigma.js/schemas/12.20.0.json" assert { type: "json" };
-// import { docMixin } from "enigma-mixin";
-// import * as enigma from "enigma.js";
-// import WebSocket from "ws";
 
 export class TestOMatiq {
   specs: Runbook;
   emitter: EventsBus;
   testResults: { [k: string]: ITestDataResult[] | ITestMetaResult[] };
-  // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[];
   qlikApps: { [k: string]: App };
   private engine: Engine;
-  private selections: { [key: string]: Selection } = {};
-  // private mainApp: { name: string; app: IAppMixin; isMain: boolean };
   private mainApp: string;
 
-  constructor(
-    specs: Runbook,
-    // qlikApps: { name: string; app: IAppMixin; isMain: boolean }[],
-    // qlikApps: { [k: string]: App },
-    validateSchema?: boolean
-  ) {
+  constructor(specs: Runbook, validateSchema: boolean = true) {
     this.specs = specs;
-    // this.qlikApps = qlikApps;
-    // this.qlikApps = qlikApps;
     this.emitter = new EventsBus();
     this.testResults = {};
 
-    this.engine = Engine.getInstance(this.getMainApp());
+    this.engine = Engine.getInstance(this.getMainApp(), this.specs.environment);
 
     // if (validateSchema != undefined) validateSchema = validateSchema || true;
 
@@ -433,5 +416,13 @@ export class TestOMatiq {
     if (this.specs.environment.mainApp) return this.specs.environment.mainApp;
     // else there is only one app specified so return its key
     return Object.keys(this.specs.environment.apps)[0];
+  }
+
+  /**
+   * Try and establish connection with Qlik
+   * if connected ok then return the Engine version
+   */
+  public async checkConnection() {
+    return await this.engine.checkConnection();
   }
 }

@@ -53,6 +53,8 @@ export class Scalar extends DataTestsBase {
 
     const comparisonResults = await Promise.all(
       this.testDetails.results.map((result) => {
+        // if result is an expression we have to evaluate it first
+        // and then compare it (with or without variation)
         if (result.value.toString().startsWith("=")) {
           return this.evaluate(
             result.value as string,
@@ -78,6 +80,18 @@ export class Scalar extends DataTestsBase {
           });
         }
 
+        // if the result is NOT an expression but it has variation
+        if (result.variation) {
+          let { upperLimit, lowerLimit } = compareWithVariance(
+            result.variation,
+            leftSide as number
+          );
+
+          return inRange(result.value, lowerLimit, upperLimit);
+        }
+
+        // if the result is NOT an expression
+        // and dont have variation
         return operations[result.operator ? result.operator : "=="](
           leftSide,
           result.value
@@ -94,6 +108,7 @@ export class Scalar extends DataTestsBase {
       const variationMessage = this.testDetails.results[i].variation
         ? ` (${this.testDetails.results[i].variation})`
         : "";
+
       return `${result ? "PASS" : "FAIL"} ${leftSide} ${
         this.testDetails.results[i].operator || "=="
       } ${this.testDetails.results[i].value}${variationMessage}`;

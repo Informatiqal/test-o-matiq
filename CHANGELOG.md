@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2024-01-02
+
+- check connection method (to be utilized in the CLI package)
+- Engine port and host are passed from the config
+- Engine will use the `apiKey` from the config (if provided) when connecting with Qlik
+- [BUG] fixed bug where variation was not calculated when the result was not an expression
+
 ## [0.9.0] - 2023-12-31
 
 - Multi-app testing - make selections in multiple apps and compare results between apps [#137](https://github.com/Informatiqal/test-o-matiq/issues/137)
