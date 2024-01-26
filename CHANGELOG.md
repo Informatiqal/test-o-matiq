@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 2024-01-26
+
+- session variables are created in sequence but the apps are ran in parallel
+- dependency updates
+
 ## [0.9.1] - 2024-01-02
 
 - check connection method (to be utilized in the CLI package)
