@@ -485,16 +485,17 @@ export type IPropsSelections = {
 };
 
 export type IPropsSelection =
-  | {
-      // name: string;
-      description?: string;
-      byName?: undefined;
-    }
+  // | {
+  //     // name: string;
+  //     description?: string;
+  //     byName?: undefined;
+  //   }
   | (Selection | SelectionByName);
 
 export type Selection = {
   field: string;
   values: string[] | number[];
+  description?: string;
   byName?: undefined;
   // name: string;
 };

@@ -51,6 +51,9 @@
         "host": {
           "type": "string"
         },
+        "port": {
+          "type": "number"
+        },
         "apps": {
           "$ref": "#/definitions/Apps"
         },
@@ -94,6 +97,9 @@
       "properties": {
         "host": {
           "type": "string"
+        },
+        "port": {
+          "type": "number"
         },
         "mainApp": {
           "type": "string"
@@ -197,6 +203,9 @@
           }
         }
       },
+      "required": [
+        "MasterItems"
+      ],
       "additionalProperties": false
     },
     "IDataModel": {
@@ -700,18 +709,6 @@
     "IPropsSelection": {
       "anyOf": [
         {
-          "type": "object",
-          "properties": {
-            "description": {
-              "type": "string"
-            },
-            "byName": {
-              "not": {}
-            }
-          },
-          "additionalProperties": false
-        },
-        {
           "$ref": "#/definitions/Selection"
         },
         {
@@ -740,6 +737,9 @@
               }
             }
           ]
+        },
+        "description": {
+          "type": "string"
         },
         "byName": {
           "not": {}

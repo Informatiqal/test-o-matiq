@@ -362,30 +362,56 @@ export class TestOMatiq {
    * Create the specified session variables (if any)
    */
   private async createSessionVariables() {
-    // TODO: group the variables by app to speed the variable creation
+    let groupedVariablesByApp: {
+      [app: string]: {
+        [varName: string]: {};
+      };
+    } = {};
+
+    Object.keys(this.specs.environment.apps).map((appName) => {
+      groupedVariablesByApp[appName] = {};
+    });
+    groupedVariablesByApp["undefined"] = {};
+
+    // group the variables by app
+    // this will speed up the variables creation
     for (let [varName, varDefinition] of Object.entries(
       this.specs.props.variables
     )) {
-      // assume the main qlik app
-      let qlikApp = this.engine.enigmaData[this.engine.mainApp].app;
-
-      // if specific app is defined then create the
-      // variable there
       if (varDefinition["app"]) {
-        qlikApp = this.engine.enigmaData[varDefinition["app"]].app;
+        groupedVariablesByApp["undefined"][varName] = varDefinition;
+      } else {
+        groupedVariablesByApp[varDefinition["app"]][varName] = varDefinition;
       }
-
-      await qlikApp.createSessionVariable({
-        qName: varName,
-        qDefinition: varDefinition["expression"]
-          ? varDefinition["expression"]
-          : varDefinition,
-        qIncludeInBookmark: false,
-        qInfo: {
-          qType: "test-o-matiq-variable",
-        },
-      });
     }
+
+    // create all session variables in sequence in each app
+    // but run the apps in parallel
+    await Promise.all(
+      Object.keys(groupedVariablesByApp).map((appName) => {
+        for (let [varName, varDefinition] of Object.entries(
+          groupedVariablesByApp[appName]
+        )) {
+          // if app is not specified in the var definition then the app name
+          // will be "undefined". In this case the main app is used
+          const qlikApp =
+            appName == "undefined"
+              ? this.engine.enigmaData[this.engine.mainApp].app
+              : this.engine.enigmaData[varDefinition["app"]].app;
+
+          return qlikApp.createSessionVariable({
+            qName: varName,
+            qDefinition: varDefinition["expression"]
+              ? varDefinition["expression"]
+              : varDefinition,
+            qIncludeInBookmark: false,
+            qInfo: {
+              qType: "test-o-matiq-variable",
+            },
+          });
+        }
+      })
+    );
   }
 
   private validateTaskOperatorResult() {
