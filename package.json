@@ -57,7 +57,7 @@
     "@types/enigma.js": "^2.2.5",
     "@types/node": "20.11.7",
     "@types/qlik-engineapi": "^12.67.16",
-    "dotenv": "16.4.1",
+    "dotenv": "16.4.5",
     "esm": "^3.2.25",
     "nyc": "15.1.0",
     "rollup": "4.9.6",
